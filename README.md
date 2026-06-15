@@ -1,0 +1,78 @@
+# WinTextCapture
+
+WinTextCapture is a small Windows tray utility for copying text from anywhere on the screen. Press the hotkey, drag over text, release the mouse button, and the recognized text is copied to the clipboard.
+
+It is intended as a lightweight alternative to installing all of PowerToys just for Text Extractor.
+
+## Features
+
+- Native Windows OCR through `Windows.Media.Ocr.OcrEngine`
+- Global `Win + Shift + T` capture hotkey
+- Screen selection overlay with multi-monitor support
+- OCR language selection from the OCR languages installed in Windows
+- Small-text preprocessing before OCR to improve recognition on compact UI and games
+- Clipboard write retry and verification
+- Visible toast feedback with a short preview of copied text
+- Tray menu with capture, settings, about, and exit actions
+- Optional startup with Windows
+- Light, dark, and system theme support for settings
+
+## Usage
+
+1. Start `WinTextCapture.exe`.
+2. Use `Win + Shift + T`.
+3. Drag a rectangle over the text you want to copy.
+4. Release the mouse button.
+5. Paste with `Ctrl + V`.
+
+If OCR succeeds, the app shows a small toast such as `Copied: ...`. If no readable text is found or the clipboard does not change, the toast says so explicitly.
+
+## OCR Languages
+
+WinTextCapture uses Windows' built-in OCR engine. It can only recognize languages that have OCR support installed in Windows.
+
+Open **Settings** from the tray menu and choose the OCR language that matches the text you capture. For games or apps using English UI text, selecting `English (en-US)` is usually better than `Automatic`.
+
+To see or install OCR language packs on Windows, use Windows language settings or the PowerShell capability commands documented by Microsoft for Windows OCR language packs.
+
+## Hotkey Notes
+
+The default hotkey is `Win + Shift + T`.
+
+The app uses a low-level keyboard hook so it can consume the shortcut before the Windows or PowerToys handler in most normal cases. If PowerToys Text Extractor is also enabled with the same shortcut, hook order can still cause conflicts. Disable or change the PowerToys Text Extractor shortcut if both tools are installed.
+
+## Build
+
+Requirements:
+
+- Windows 10/11
+- .NET 9 SDK
+
+Build debug:
+
+```powershell
+dotnet build
+```
+
+Build release:
+
+```powershell
+dotnet build -c Release
+```
+
+Run tests:
+
+```powershell
+dotnet run --project tests\WinTextCapture.Tests\WinTextCapture.Tests.csproj
+```
+
+## Project Structure
+
+- `TrayApplicationContext.cs` owns the tray icon, menu, settings, capture trigger, and result feedback.
+- `KeyboardHook.cs` installs the global low-level keyboard hook.
+- `KeyboardHookState.cs` contains the testable hotkey state machine.
+- `OverlayForm.cs` handles screen capture, selection, OCR, and clipboard write flow.
+- `OcrImagePreprocessor.cs` upscales small selections before OCR.
+- `ClipboardWriter.cs` retries and verifies clipboard writes.
+- `SettingsForm.cs` provides the small Windows Forms settings UI.
+- `tests/WinTextCapture.Tests` contains lightweight regression tests without external test packages.
