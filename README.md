@@ -14,6 +14,7 @@
   <a href="https://github.com/ydbilgin/WinTextCapture/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/ydbilgin/WinTextCapture/total?color=success"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011-0078D6?logo=windows&logoColor=white">
   <img alt=".NET" src="https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/ydbilgin/WinTextCapture?color=blue"></a>
 </p>
 
 <p align="center">
@@ -95,3 +96,7 @@ dotnet run --project tests\WinTextCapture.Tests\WinTextCapture.Tests.csproj
 - `ClipboardWriter.cs` retries and verifies clipboard writes.
 - `SettingsForm.cs` provides the small Windows Forms settings UI.
 - `tests/WinTextCapture.Tests` contains lightweight regression tests without external test packages.
+
+## License
+
+[MIT](LICENSE)
