@@ -1,8 +1,27 @@
-# WinTextCapture
+<p align="center">
+  <img src="docs/icon.png" alt="WinTextCapture" width="120">
+</p>
 
-WinTextCapture is a small Windows tray utility for copying text from anywhere on the screen. Press the hotkey, drag over text, release the mouse button, and the recognized text is copied to the clipboard.
+<h1 align="center">WinTextCapture 📋🔎</h1>
 
-It is intended as a lightweight alternative to installing all of PowerToys just for Text Extractor.
+<p align="center">
+  A lightweight Windows tray utility for copying text from anywhere on screen.<br>
+  Press the hotkey, drag over text, release — the recognized text is on your clipboard.
+</p>
+
+<p align="center">
+  <a href="https://github.com/ydbilgin/WinTextCapture/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/ydbilgin/WinTextCapture?label=release&color=2ea44f"></a>
+  <a href="https://github.com/ydbilgin/WinTextCapture/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/ydbilgin/WinTextCapture/total?color=success"></a>
+  <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011-0078D6?logo=windows&logoColor=white">
+  <img alt=".NET" src="https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white">
+</p>
+
+<p align="center">
+  <img src="docs/settings.png" alt="WinTextCapture settings (light)" width="420">
+  <img src="docs/settings-dark.png" alt="WinTextCapture settings (dark)" width="420">
+</p>
+
+Press the hotkey, drag over text, release the mouse button, and the recognized text is copied to the clipboard. It is intended as a lightweight alternative to installing all of PowerToys just for Text Extractor — native Windows OCR, no cloud, no account.
 
 ## Features
 
