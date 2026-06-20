@@ -26,16 +26,32 @@ Press the hotkey, drag over text, release the mouse button, and the recognized t
 
 ## Features
 
-- Native Windows OCR through `Windows.Media.Ocr.OcrEngine`
-- Global `Win + Shift + T` capture hotkey
-- Screen selection overlay with multi-monitor support
-- OCR language selection from the OCR languages installed in Windows
-- Small-text preprocessing before OCR to improve recognition on compact UI and games
-- Clipboard write retry and verification
-- Visible toast feedback with a short preview of copied text
-- Tray menu with capture, settings, about, and exit actions
-- Optional startup with Windows
-- Light, dark, and system theme support for settings
+- 🔎 **Native Windows OCR** — uses `Windows.Media.Ocr`, fully offline. No cloud, no account, no API key.
+- ⌨️ **Global hotkey** — press `Win + Shift + T` from anywhere, drag a box over the text, release, done.
+- 🖥️ **Multi-monitor selection overlay** — grab text on any screen; mixed-DPI aware.
+- 🌍 **OCR language picker** — choose from the OCR languages installed in Windows, ideal for non-English text.
+- 🔬 **Small-text preprocessing** — upscales tiny selections before OCR for sharper recognition on compact UI and games.
+- 📋 **Reliable clipboard** — every write is retried and verified, so you never paste stale text.
+- 🔔 **Toast feedback** — a short preview of what was copied, or a clear note when nothing readable was found.
+- 🚀 **Quiet & light** — optional start with Windows, single instance, tray-only, and light / dark / system themes.
+
+## Install
+
+### Option A — download a release
+1. Grab the latest **`WinTextCapture.exe`** from the **[Releases page](https://github.com/ydbilgin/WinTextCapture/releases/latest)**.
+2. Run it — it lives in the system tray, no installer. The build is standalone, so no .NET runtime is required.
+
+### Option B — build from source
+You'll need the **.NET 9 SDK** on Windows 10/11.
+
+```powershell
+git clone https://github.com/ydbilgin/WinTextCapture.git
+cd WinTextCapture
+dotnet build -c Release
+
+# standalone single-file exe (bundles the runtime)
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+```
 
 ## Usage
 
@@ -61,26 +77,9 @@ The default hotkey is `Win + Shift + T`.
 
 The app uses a low-level keyboard hook so it can consume the shortcut before the Windows or PowerToys handler in most normal cases. If PowerToys Text Extractor is also enabled with the same shortcut, hook order can still cause conflicts. Disable or change the PowerToys Text Extractor shortcut if both tools are installed.
 
-## Build
+## Testing
 
-Requirements:
-
-- Windows 10/11
-- .NET 9 SDK
-
-Build debug:
-
-```powershell
-dotnet build
-```
-
-Build release:
-
-```powershell
-dotnet build -c Release
-```
-
-Run tests:
+The hotkey state machine and capture-message formatting are covered by lightweight, dependency-free tests:
 
 ```powershell
 dotnet run --project tests\WinTextCapture.Tests\WinTextCapture.Tests.csproj
