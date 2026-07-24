@@ -17,7 +17,7 @@ internal static class Screenshot
         if (!string.IsNullOrEmpty(themeOverride)) s.Theme = themeOverride;   // "Light" | "Dark"
         Strings.Use(s.Language);
 
-        using var form = new SettingsForm(s);
+        using var form = new SettingsForm(s, s.AutoStart);
         form.StartPosition = FormStartPosition.Manual;
         form.Location = new Point(6000, 2000);   // beyond all monitors -> never visible
         form.ShowInTaskbar = false;

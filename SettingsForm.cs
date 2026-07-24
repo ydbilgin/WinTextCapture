@@ -16,7 +16,7 @@ internal sealed class SettingsForm : Form
 
     public Settings Result { get; private set; }
 
-    public SettingsForm(Settings settings)
+    public SettingsForm(Settings settings, bool autoStartEnabled)
     {
         Result = settings;
         _ctrl = settings.ModCtrl;
@@ -80,7 +80,7 @@ internal sealed class SettingsForm : Form
 
         Controls.Add(new Label { Text = Strings.GeneralHead, AutoSize = true, Left = 18, Top = y, Font = headFont, Tag = "head" });
         y += 26;
-        _autoStart = new CheckBox { Text = Strings.StartWithWindows, Left = 18, Top = y, Width = 360, Height = 22, Checked = settings.AutoStart };
+        _autoStart = new CheckBox { Text = Strings.StartWithWindows, Left = 18, Top = y, Width = 360, Height = 22, Checked = autoStartEnabled };
         Controls.Add(_autoStart);
         y += 46;
 

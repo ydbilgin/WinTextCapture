@@ -57,6 +57,7 @@ public static class Strings
     public static string CaptureError => G("CaptureError");
     public static string CaptureBusy => G("CaptureBusy");
     public static string AboutTitle => G("AboutTitle");
+    public static string TipAutoStartFail => G("TipAutoStartFail");
 
     // ---- interpolated (keep {0} out of the table) ----
     public static string TrayText(string combo) => string.Format(G("TrayText"), combo);
@@ -100,6 +101,7 @@ public static class Strings
         ["AboutTitle"] = "About WinTextCapture",
         ["TrayText"] = "WinTextCapture — {0}",
         ["TipHotkeyFail"] = "Couldn't register hotkey: {0}",
+        ["TipAutoStartFail"] = "Couldn't update the Windows startup setting.",
         ["AboutDialogBody"] = "WinTextCapture v{1}\n\nNative Windows OCR — screen text to clipboard.\n\nHotkey: {0}\nDrag a box over text, release to copy. Esc cancels.",
     };
 
@@ -140,6 +142,7 @@ public static class Strings
         ["AboutTitle"] = "WinTextCapture Hakkında",
         ["TrayText"] = "WinTextCapture — {0}",
         ["TipHotkeyFail"] = "Kısayol kaydedilemedi: {0}",
+        ["TipAutoStartFail"] = "Windows başlangıç ayarı güncellenemedi.",
         ["AboutDialogBody"] = "WinTextCapture v{1}\n\nYerleşik Windows OCR — ekrandaki metni panoya.\n\nKısayol: {0}\nMetnin üzerine kutu çizip bırakın, kopyalanır. Esc iptal eder.",
     };
 
