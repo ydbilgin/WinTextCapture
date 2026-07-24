@@ -30,6 +30,7 @@ internal static class Program
         Run("autostart removes an existing entry after user disable", AutoStartRemovesEntryAfterUserDisable);
         Run("crash log formats handled exceptions with diagnostics", CrashLogFormatsHandledException);
         Run("crash log distinguishes fatal exceptions", CrashLogFormatsFatalException);
+        Run("application version comes from stamped assembly metadata", ApplicationVersionIsStamped);
 
         Console.WriteLine($"Passed: {_passed}");
         return 0;
@@ -232,6 +233,11 @@ internal static class Program
 
         True(entry.Contains("| FATAL", StringComparison.Ordinal));
         True(entry.Contains("System.ApplicationException: fatal failure", StringComparison.Ordinal));
+    }
+
+    private static void ApplicationVersionIsStamped()
+    {
+        Equal("1.0.2", App.Version);
     }
 
     private static void Run(string name, Action test)
