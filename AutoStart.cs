@@ -10,13 +10,12 @@ internal static class AutoStart
 
     public static bool IsEnabled() => ReadCommand() is not null;
 
-    public static void ReconcileStartup(bool desiredEnabled)
+    public static void ReconcileStartup()
     {
         string? currentCommand = ReadCommand();
-        Apply(AutoStartDecision.EvaluateStartup(
-            desiredEnabled,
-            currentCommand,
-            Application.ExecutablePath));
+        string? storedTarget = AutoStartDecision.TargetPath(currentCommand);
+        bool storedTargetExists = storedTarget is not null && File.Exists(storedTarget);
+        Apply(AutoStartDecision.EvaluateStartup(currentCommand, Application.ExecutablePath, storedTargetExists));
     }
 
     public static void ApplyUserChange(bool enabled)
