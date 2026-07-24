@@ -60,8 +60,9 @@ internal sealed class TrayApplicationContext : ApplicationContext
         {
             autoStartEnabled = AutoStart.IsEnabled();
         }
-        catch
+        catch (Exception ex)
         {
+            CrashLogger.Write(ex, fatal: false);
             _tray.ShowBalloonTip(3000, App.Name, Strings.TipAutoStartFail, ToolTipIcon.Warning);
             return;
         }
@@ -84,8 +85,9 @@ internal sealed class TrayApplicationContext : ApplicationContext
         {
             action();
         }
-        catch
+        catch (Exception ex)
         {
+            CrashLogger.Write(ex, fatal: false);
             _tray.ShowBalloonTip(3000, App.Name, Strings.TipAutoStartFail, ToolTipIcon.Warning);
         }
     }
