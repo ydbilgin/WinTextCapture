@@ -48,7 +48,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         if (!_hook.Start())
             _tray.ShowBalloonTip(3000, App.Name, Strings.TipHotkeyFail(_settings.HotKeyText()), ToolTipIcon.Warning);
 
-        TryApplyAutoStart(() => AutoStart.ReconcileStartup(_settings.AutoStart));
+        TryApplyAutoStart(AutoStart.ReconcileStartup);
     }
 
     private void CaptureNow() => _background.StartCapture(_settings);

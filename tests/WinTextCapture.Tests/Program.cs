@@ -21,12 +21,12 @@ internal static class Program
         Run("clipboard retry rethrows after final failure", ClipboardRetryRethrowsAfterFinalFailure);
         Run("clipboard retry detects unchanged clipboard", ClipboardRetryDetectsUnchangedClipboard);
         Run("OCR preprocessing upscales small selections within bounds", OcrPreprocessorScalesSmallSelections);
-        Run("autostart writes when enabled entry is absent", AutoStartWritesWhenEntryAbsent);
-        Run("autostart rewrites a missing executable entry", AutoStartRewritesMissingExecutable);
+        Run("autostart leaves an absent entry alone at startup", AutoStartLeavesAbsentEntryAlone);
+        Run("autostart repairs an entry whose executable is gone", AutoStartRepairsMissingExecutable);
         Run("autostart keeps the current executable entry", AutoStartKeepsCurrentExecutable);
-        Run("autostart rewrites a different existing executable entry", AutoStartRewritesDifferentExecutable);
+        Run("autostart does not hijack another existing install", AutoStartDoesNotHijackAnotherInstall);
         Run("autostart treats quoted and unquoted current paths equally", AutoStartHandlesQuotedAndUnquotedPaths);
-        Run("autostart preserves a disabled existing entry at startup", AutoStartPreservesDisabledEntryAtStartup);
+        Run("autostart writes this copy when the user enables it", AutoStartWritesWhenUserEnables);
         Run("autostart removes an existing entry after user disable", AutoStartRemovesEntryAfterUserDisable);
         Run("crash log formats handled exceptions with diagnostics", CrashLogFormatsHandledException);
         Run("crash log distinguishes fatal exceptions", CrashLogFormatsFatalException);
@@ -159,47 +159,59 @@ internal static class Program
         Equal(1, OcrImagePreprocessor.ScaleFor(2500, 1400));
     }
 
-    private static void AutoStartWritesWhenEntryAbsent()
+    private static void AutoStartLeavesAbsentEntryAlone()
     {
-        Equal(AutoStartAction.Write, AutoStartDecision.EvaluateStartup(true, null, @"C:\Apps\WinTextCapture.exe"));
+        // No registry value means autostart is off. Startup must not switch it on by itself.
+        Equal(
+            AutoStartAction.LeaveAsIs,
+            AutoStartDecision.EvaluateStartup(null, @"C:\Apps\WinTextCapture.exe", storedTargetExists: false));
     }
 
-    private static void AutoStartRewritesMissingExecutable()
+    private static void AutoStartRepairsMissingExecutable()
     {
+        // The owner's real case: the value survives, the build it pointed at was cleaned away, so Windows
+        // silently starts nothing. This is the one repair the app makes on its own.
         Equal(
             AutoStartAction.Write,
-            AutoStartDecision.EvaluateStartup(true, @"""C:\Cleaned\WinTextCapture.exe""", @"C:\Apps\WinTextCapture.exe"));
+            AutoStartDecision.EvaluateStartup(@"""C:\Cleaned\WinTextCapture.exe""", @"C:\Apps\WinTextCapture.exe", storedTargetExists: false));
     }
 
     private static void AutoStartKeepsCurrentExecutable()
     {
         Equal(
             AutoStartAction.LeaveAsIs,
-            AutoStartDecision.EvaluateStartup(true, @"""C:\Apps\WinTextCapture.exe""", @"C:\Apps\WinTextCapture.exe"));
+            AutoStartDecision.EvaluateStartup(@"""C:\Apps\WinTextCapture.exe""", @"C:\Apps\WinTextCapture.exe", storedTargetExists: true));
     }
 
-    private static void AutoStartRewritesDifferentExecutable()
+    private static void AutoStartDoesNotHijackAnotherInstall()
     {
+        // A different copy that still exists may have been chosen deliberately — repairing is not hijacking.
         Equal(
-            AutoStartAction.Write,
-            AutoStartDecision.EvaluateStartup(true, @"""D:\Installed\WinTextCapture.exe""", @"C:\Apps\WinTextCapture.exe"));
+            AutoStartAction.LeaveAsIs,
+            AutoStartDecision.EvaluateStartup(@"""D:\Installed\WinTextCapture.exe""", @"C:\Apps\WinTextCapture.exe", storedTargetExists: true));
     }
 
     private static void AutoStartHandlesQuotedAndUnquotedPaths()
     {
         Equal(
             AutoStartAction.LeaveAsIs,
-            AutoStartDecision.EvaluateStartup(true, @"C:\Apps\WinTextCapture.exe", @"C:\Apps\WinTextCapture.exe"));
+            AutoStartDecision.EvaluateStartup(@"C:\Apps\WinTextCapture.exe", @"C:\Apps\WinTextCapture.exe", storedTargetExists: true));
         Equal(
             AutoStartAction.LeaveAsIs,
-            AutoStartDecision.EvaluateStartup(true, @"""C:\Apps\WinTextCapture.exe""", @"C:\Apps\WinTextCapture.exe"));
+            AutoStartDecision.EvaluateStartup(@"""C:\Apps\WinTextCapture.exe""", @"C:\Apps\WinTextCapture.exe", storedTargetExists: true));
+        Equal(@"C:\Apps\WinTextCapture.exe", AutoStartDecision.TargetPath(@"""C:\Apps\WinTextCapture.exe"""));
+        Equal(@"C:\Apps\WinTextCapture.exe", AutoStartDecision.TargetPath(@"C:\Apps\WinTextCapture.exe"));
     }
 
-    private static void AutoStartPreservesDisabledEntryAtStartup()
+    private static void AutoStartWritesWhenUserEnables()
     {
         Equal(
-            AutoStartAction.LeaveAsIs,
-            AutoStartDecision.EvaluateStartup(false, @"""D:\Installed\WinTextCapture.exe""", @"C:\Apps\WinTextCapture.exe"));
+            AutoStartAction.Write,
+            AutoStartDecision.EvaluateUserChange(true, null, @"C:\Apps\WinTextCapture.exe"));
+        // Enabling from a copy other than the one already registered points the entry at this copy.
+        Equal(
+            AutoStartAction.Write,
+            AutoStartDecision.EvaluateUserChange(true, @"""D:\Installed\WinTextCapture.exe""", @"C:\Apps\WinTextCapture.exe"));
     }
 
     private static void AutoStartRemovesEntryAfterUserDisable()
