@@ -4,7 +4,7 @@ namespace WinTextCapture;
 
 internal static class Program
 {
-    private const string SingleInstanceMutexName = "Global\\WinTextCapture_SingleInstance_3F1A";
+    private const string SingleInstanceMutexName = "Local\\WinTextCapture_SingleInstance_3F1A";
 
     [STAThread]
     private static int Main(string[] args)
