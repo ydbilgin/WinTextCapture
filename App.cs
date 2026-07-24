@@ -4,5 +4,6 @@ namespace WinTextCapture;
 internal static class App
 {
     public const string Name = "WinTextCapture";
-    public const string Version = "1.0.1";
+    public static string Version =>
+        typeof(App).Assembly.GetName().Version?.ToString(3) ?? "unknown";
 }
