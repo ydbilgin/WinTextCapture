@@ -47,13 +47,26 @@ internal sealed class TrayApplicationContext : ApplicationContext
         RebuildText();
         if (!_hook.Start())
             _tray.ShowBalloonTip(3000, App.Name, Strings.TipHotkeyFail(_settings.HotKeyText()), ToolTipIcon.Warning);
+
+        TryApplyAutoStart(() => AutoStart.ReconcileStartup(_settings.AutoStart));
     }
 
     private void CaptureNow() => _background.StartCapture(_settings);
 
     private void OpenSettings()
     {
-        using var form = new SettingsForm(_settings);
+        bool autoStartEnabled;
+        try
+        {
+            autoStartEnabled = AutoStart.IsEnabled();
+        }
+        catch
+        {
+            _tray.ShowBalloonTip(3000, App.Name, Strings.TipAutoStartFail, ToolTipIcon.Warning);
+            return;
+        }
+
+        using var form = new SettingsForm(_settings, autoStartEnabled);
         form.Icon = _icon;
         if (form.ShowDialog() != DialogResult.OK)
             return;
@@ -61,8 +74,20 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _settings = form.Result;
         _settings.Save();
         Strings.Use(_settings.Language);
-        AutoStart.Apply(_settings.AutoStart);
+        TryApplyAutoStart(() => AutoStart.ApplyUserChange(_settings.AutoStart));
         RebuildText();
+    }
+
+    private void TryApplyAutoStart(Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch
+        {
+            _tray.ShowBalloonTip(3000, App.Name, Strings.TipAutoStartFail, ToolTipIcon.Warning);
+        }
     }
 
     private void ShowAbout()
