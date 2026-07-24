@@ -7,7 +7,24 @@ internal static class Program
     private const string SingleInstanceMutexName = "Global\\WinTextCapture_SingleInstance_3F1A";
 
     [STAThread]
-    private static void Main(string[] args)
+    private static int Main(string[] args)
+    {
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+        Application.ThreadException += OnThreadException;
+        AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+
+        try
+        {
+            return Run(args);
+        }
+        catch (Exception ex)
+        {
+            CrashLogger.Write(ex, fatal: true);
+            return 1;
+        }
+    }
+
+    private static int Run(string[] args)
     {
         Native.SetProcessDpiAwarenessContext(Native.DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
         Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
@@ -21,30 +38,36 @@ internal static class Program
             string? theme = args.Length >= 3 ? args[2] : null;
             string lang = args.Length >= 4 ? args[3] : "en";
             Screenshot.CaptureSettings(args[1], theme, lang);
-            return;
+            return 0;
         }
 
         // Allow only one running instance. A second launch (double-click,
         // start menu, autostart) exits immediately instead of stacking tray icons.
         using var singleInstance = new Mutex(initiallyOwned: true, SingleInstanceMutexName, out bool isFirstInstance);
         if (!isFirstInstance)
-            return;
+            return 0;
 
-        try
-        {
-            Application.Run(new TrayApplicationContext());
-        }
-        catch (Exception ex)
-        {
-            try
-            {
-                Directory.CreateDirectory(Settings.Dir);
-                File.WriteAllText(Path.Combine(Settings.Dir, "error.log"), ex.ToString());
-            }
-            catch
-            {
-                // Last-chance logging must never crash startup.
-            }
-        }
+        Application.Run(new TrayApplicationContext());
+        return 0;
+    }
+
+    private static void OnThreadException(object sender, ThreadExceptionEventArgs e)
+    {
+        CrashLogger.Write(e.Exception, fatal: false);
+
+        // WinForms UI exceptions, including capture-path failures, are logged and handled so the
+        // tray remains available for another capture instead of disappearing without explanation.
+    }
+
+    private static void OnUnhandledException(object? sender, UnhandledExceptionEventArgs e)
+    {
+        Exception exception = e.ExceptionObject as Exception
+            ?? new InvalidOperationException($"Unhandled non-exception object: {e.ExceptionObject}");
+        CrashLogger.Write(exception, fatal: true);
+
+        // This boundary represents a corrupt or unrecoverable process state. The runtime will
+        // terminate after the event; set a failing exit status and request orderly WinForms exit.
+        Environment.ExitCode = 1;
+        Application.Exit();
     }
 }

@@ -28,6 +28,8 @@ internal static class Program
         Run("autostart treats quoted and unquoted current paths equally", AutoStartHandlesQuotedAndUnquotedPaths);
         Run("autostart preserves a disabled existing entry at startup", AutoStartPreservesDisabledEntryAtStartup);
         Run("autostart removes an existing entry after user disable", AutoStartRemovesEntryAfterUserDisable);
+        Run("crash log formats handled exceptions with diagnostics", CrashLogFormatsHandledException);
+        Run("crash log distinguishes fatal exceptions", CrashLogFormatsFatalException);
 
         Console.WriteLine($"Passed: {_passed}");
         return 0;
@@ -204,6 +206,32 @@ internal static class Program
         Equal(
             AutoStartAction.Remove,
             AutoStartDecision.EvaluateUserChange(false, @"""C:\Apps\WinTextCapture.exe""", @"C:\Apps\WinTextCapture.exe"));
+    }
+
+    private static void CrashLogFormatsHandledException()
+    {
+        var exception = new InvalidOperationException("original failure");
+        string entry = CrashLog.Format(
+            new DateTime(2026, 7, 25, 12, 34, 56, DateTimeKind.Utc),
+            "1.0.2",
+            fatal: false,
+            exception);
+
+        True(entry.Contains("2026-07-25T12:34:56.0000000Z", StringComparison.Ordinal));
+        True(entry.Contains("WinTextCapture 1.0.2 | HANDLED", StringComparison.Ordinal));
+        True(entry.Contains(exception.ToString(), StringComparison.Ordinal));
+    }
+
+    private static void CrashLogFormatsFatalException()
+    {
+        string entry = CrashLog.Format(
+            DateTime.UnixEpoch,
+            "1.0.2",
+            fatal: true,
+            new ApplicationException("fatal failure"));
+
+        True(entry.Contains("| FATAL", StringComparison.Ordinal));
+        True(entry.Contains("System.ApplicationException: fatal failure", StringComparison.Ordinal));
     }
 
     private static void Run(string name, Action test)
