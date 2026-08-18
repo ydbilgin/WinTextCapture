@@ -6,5 +6,5 @@ out/
 *.log
 .vs/
 STAGING/
-CURRENT_STATUS.md
+STATUS.md
 PROJECT_RULES.md
