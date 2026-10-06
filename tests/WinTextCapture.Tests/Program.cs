@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using WinTextCapture;
@@ -40,6 +41,11 @@ internal static class Program
         Run("crash log formats handled exceptions with diagnostics", CrashLogFormatsHandledException);
         Run("crash log distinguishes fatal exceptions", CrashLogFormatsFatalException);
         Run("application version comes from stamped assembly metadata", ApplicationVersionIsStamped);
+        Run("settings replace explicit null preferences with defaults", SettingsNullPreferencesUseDefaults);
+        Run("settings reject malformed OCR language tags", SettingsMalformedOcrTagUsesDefault);
+        Run("settings recover an invalid shortcut without losing other preferences", SettingsInvalidShortcutUsesDefault);
+        Run("modifier-only and undefined trigger keys are invalid", ModifierAndUndefinedKeysAreInvalid);
+        Run("settings preserve valid preferences and recover broken JSON", SettingsValidAndBrokenJson);
 
         Console.WriteLine($"Passed: {_passed}");
         Console.WriteLine($"Failed: {_failed}");
@@ -322,6 +328,64 @@ internal static class Program
     private static void ApplicationVersionIsStamped()
     {
         Equal("1.0.2", App.Version);
+    }
+
+    private static void SettingsNullPreferencesUseDefaults()
+    {
+        var settings = LoadSettingsFixture("{\"OcrLanguage\":null,\"Language\":null,\"Theme\":null}");
+        Equal("auto", settings.OcrLanguage);
+        Equal("auto", settings.Language);
+        Equal("System", settings.Theme);
+    }
+
+    private static void SettingsMalformedOcrTagUsesDefault()
+    {
+        var settings = LoadSettingsFixture("{\"OcrLanguage\":\"not_a_language\",\"Theme\":\"Dark\"}");
+        Equal("auto", settings.OcrLanguage);
+        Equal("Dark", settings.Theme);
+    }
+
+    private static void SettingsInvalidShortcutUsesDefault()
+    {
+        var settings = LoadSettingsFixture("{\"HotKey\":0,\"ModCtrl\":false,\"ModAlt\":false,\"ModShift\":false,\"ModWin\":false,\"Theme\":\"Dark\"}");
+        Equal(HotkeyBinding.FromSettings(new Settings()), HotkeyBinding.FromSettings(settings));
+        Equal("Dark", settings.Theme);
+    }
+
+    private static void ModifierAndUndefinedKeysAreInvalid()
+    {
+        foreach (var key in new[] { Keys.ControlKey, Keys.LControlKey, Keys.RControlKey,
+            Keys.ShiftKey, Keys.LShiftKey, Keys.RShiftKey, Keys.Menu, Keys.LMenu, Keys.RMenu,
+            Keys.LWin, Keys.RWin, Keys.T | Keys.Control, (Keys)255 })
+        {
+            True(!new HotkeyBinding(key, Ctrl: true, Alt: false, Shift: false, Win: false).IsValid);
+        }
+    }
+
+    private static void SettingsValidAndBrokenJson()
+    {
+        var settings = LoadSettingsFixture("{\"HotKey\":89,\"ModCtrl\":true,\"ModShift\":false,\"ModWin\":false,\"OcrLanguage\":\"tr-TR\",\"Language\":\"tr\",\"Theme\":\"Dark\"}");
+        Equal(new HotkeyBinding(Keys.Y, true, false, false, false), HotkeyBinding.FromSettings(settings));
+        Equal("tr-TR", settings.OcrLanguage);
+        Equal("tr", settings.Language);
+        Equal("Dark", settings.Theme);
+        Equal("auto", LoadSettingsFixture("{").OcrLanguage);
+        Equal("auto", LoadSettingsFixture("null").OcrLanguage);
+        Equal("auto", LoadSettingsFixture("{}").OcrLanguage);
+    }
+
+    private static Settings LoadSettingsFixture(string json)
+    {
+        string path = Path.Combine(AppContext.BaseDirectory, $"settings-fixture-{Guid.NewGuid():N}.json");
+        try
+        {
+            File.WriteAllText(path, json);
+            return Settings.Load(path);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     private static void Run(string name, Action test)

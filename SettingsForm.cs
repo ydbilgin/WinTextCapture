@@ -154,7 +154,7 @@ internal sealed class SettingsForm : Form
 
     private void Ok_Click(object? sender, EventArgs e)
     {
-        if (_key == Keys.None || !(_ctrl || _alt || _shift || _win))
+        if (!new HotkeyBinding(_key, _ctrl, _alt, _shift, _win).IsValid)
         {
             MessageBox.Show(Strings.ValidationPickKey, App.Name, MessageBoxButtons.OK, MessageBoxIcon.Warning);
             DialogResult = DialogResult.None;
