@@ -33,7 +33,6 @@ internal sealed class SettingsForm : Form
         ShowInTaskbar = false;
         StartPosition = FormStartPosition.CenterScreen;
         Font = new Font("Segoe UI", 9f);
-        ClientSize = new Size(440, 362);
 
         var headFont = new Font("Segoe UI Semibold", 9f);
         int y = 18;
@@ -100,9 +99,11 @@ internal sealed class SettingsForm : Form
         _themeCombo.SelectedIndex = settings.Theme switch { "Light" => 1, "Dark" => 2, _ => 0 };
         _themeCombo.SelectedIndexChanged += (s, e) => ApplyThemeLive();
         Controls.Add(_themeCombo);
+        y += 42;
+        ClientSize = new Size(440, y + 48);
 
-        var cancel = new Button { Text = Strings.Cancel, Left = 324, Top = 316, Width = 96, Height = 30, FlatStyle = FlatStyle.Flat, DialogResult = DialogResult.Cancel };
-        var ok = new Button { Text = Strings.Save, Left = 220, Top = 316, Width = 96, Height = 30, FlatStyle = FlatStyle.Flat, Tag = "primary", DialogResult = DialogResult.OK };
+        var cancel = new Button { Text = Strings.Cancel, Left = 324, Top = y, Width = 96, Height = 30, FlatStyle = FlatStyle.Flat, DialogResult = DialogResult.Cancel };
+        var ok = new Button { Text = Strings.Save, Left = 220, Top = y, Width = 96, Height = 30, FlatStyle = FlatStyle.Flat, Tag = "primary", DialogResult = DialogResult.OK };
         ok.Click += Ok_Click;
         Controls.Add(ok);
         Controls.Add(cancel);

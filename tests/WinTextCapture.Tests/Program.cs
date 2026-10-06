@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using WinTextCapture;
@@ -46,6 +47,7 @@ internal static class Program
         Run("settings recover an invalid shortcut without losing other preferences", SettingsInvalidShortcutUsesDefault);
         Run("modifier-only and undefined trigger keys are invalid", ModifierAndUndefinedKeysAreInvalid);
         Run("settings preserve valid preferences and recover broken JSON", SettingsValidAndBrokenJson);
+        Run("settings action buttons do not overlap appearance controls", SettingsButtonsDoNotOverlapAppearance);
 
         Console.WriteLine($"Passed: {_passed}");
         Console.WriteLine($"Failed: {_failed}");
@@ -386,6 +388,26 @@ internal static class Program
         {
             File.Delete(path);
         }
+    }
+
+    private static void SettingsButtonsDoNotOverlapAppearance()
+    {
+        foreach (string language in new[] { "en", "tr" })
+        {
+            Strings.Use(language);
+            using var form = new SettingsForm(new Settings(), autoStartEnabled: false);
+            True(!form.Visible);
+            foreach (var button in form.Controls.OfType<Button>())
+            {
+                True(form.ClientRectangle.Contains(button.Bounds));
+                foreach (var combo in form.Controls.OfType<ComboBox>())
+                {
+                    if (button.Bounds.IntersectsWith(combo.Bounds))
+                        throw new InvalidOperationException($"{language}: {button.Text} overlaps a dropdown at {combo.Bounds}.");
+                }
+            }
+        }
+        Strings.Use("en");
     }
 
     private static void Run(string name, Action test)
