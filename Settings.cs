@@ -28,12 +28,14 @@ public sealed class Settings
     [JsonIgnore]
     public static string FilePath => Path.Combine(Dir, "settings.json");
 
-    public static Settings Load()
+    public static Settings Load() => Load(FilePath);
+
+    internal static Settings Load(string path)
     {
         try
         {
-            if (File.Exists(FilePath))
-                return JsonSerializer.Deserialize<Settings>(File.ReadAllText(FilePath)) ?? new Settings();
+            if (File.Exists(path))
+                return JsonSerializer.Deserialize<Settings>(File.ReadAllText(path)) ?? new Settings();
         }
         catch { /* fall through to defaults */ }
         return new Settings();

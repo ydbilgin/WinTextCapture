@@ -7,6 +7,7 @@ using WinTextCapture;
 internal static class Program
 {
     private static int _passed;
+    private static int _failed;
 
     [STAThread]
     private static int Main()
@@ -33,7 +34,8 @@ internal static class Program
         Run("application version comes from stamped assembly metadata", ApplicationVersionIsStamped);
 
         Console.WriteLine($"Passed: {_passed}");
-        return 0;
+        Console.WriteLine($"Failed: {_failed}");
+        return _passed > 0 && _failed == 0 ? 0 : 1;
     }
 
     private static void HotkeyTriggersOnceAndResets()
@@ -264,7 +266,7 @@ internal static class Program
         {
             Console.Error.WriteLine($"FAIL {name}");
             Console.Error.WriteLine(ex.Message);
-            Environment.Exit(1);
+            _failed++;
         }
     }
 
