@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using WinTextCapture;
@@ -25,6 +26,10 @@ internal static class Program
         Run("clipboard retry rethrows after final failure", ClipboardRetryRethrowsAfterFinalFailure);
         Run("clipboard retry detects unchanged clipboard", ClipboardRetryDetectsUnchangedClipboard);
         Run("OCR preprocessing upscales small selections within bounds", OcrPreprocessorScalesSmallSelections);
+        Run("OCR preprocessing bounds oversized landscape selections", OcrPreprocessorBoundsLandscape);
+        Run("OCR preprocessing bounds oversized portrait selections", OcrPreprocessorBoundsPortrait);
+        Run("OCR scale calculation does not overflow for large dimensions", OcrScaleDoesNotOverflow);
+        Run("OCR preprocessing respects a supplied engine limit", OcrPreprocessorRespectsEngineLimit);
         Run("autostart leaves an absent entry alone at startup", AutoStartLeavesAbsentEntryAlone);
         Run("autostart repairs an entry whose executable is gone", AutoStartRepairsMissingExecutable);
         Run("autostart keeps the current executable entry", AutoStartKeepsCurrentExecutable);
@@ -195,6 +200,35 @@ internal static class Program
         Equal(3, OcrImagePreprocessor.ScaleFor(400, 60));
         Equal(2, OcrImagePreprocessor.ScaleFor(900, 160));
         Equal(1, OcrImagePreprocessor.ScaleFor(2500, 1400));
+    }
+
+    private static void OcrPreprocessorBoundsLandscape()
+    {
+        using var source = new Bitmap(3300, 12);
+        using var prepared = OcrImagePreprocessor.Prepare(source);
+        Equal(new Size(3200, 11), prepared.Size);
+        Equal(new Size(3300, 12), source.Size);
+    }
+
+    private static void OcrPreprocessorBoundsPortrait()
+    {
+        using var source = new Bitmap(12, 3300);
+        using var prepared = OcrImagePreprocessor.Prepare(source);
+        Equal(new Size(11, 3200), prepared.Size);
+        Equal(new Size(12, 3300), source.Size);
+    }
+
+    private static void OcrScaleDoesNotOverflow()
+    {
+        Equal(1, OcrImagePreprocessor.ScaleFor(int.MaxValue, 60));
+        Equal(1, OcrImagePreprocessor.ScaleFor(60, int.MaxValue));
+    }
+
+    private static void OcrPreprocessorRespectsEngineLimit()
+    {
+        using var source = new Bitmap(60, 20);
+        using var prepared = OcrImagePreprocessor.Prepare(source, maxDimension: 32);
+        Equal(new Size(32, 10), prepared.Size);
     }
 
     private static void AutoStartLeavesAbsentEntryAlone()

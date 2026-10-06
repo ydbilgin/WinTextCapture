@@ -150,7 +150,7 @@ internal sealed class OverlayForm : Form
         string tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".png");
         try
         {
-            using var ocrBitmap = OcrImagePreprocessor.Prepare(bitmap);
+            using var ocrBitmap = OcrImagePreprocessor.Prepare(bitmap, checked((int)OcrEngine.MaxImageDimension));
             ocrBitmap.Save(tempFile, ImageFormat.Png);
 
             var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(tempFile);
