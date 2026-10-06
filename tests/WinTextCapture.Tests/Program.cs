@@ -23,6 +23,7 @@ internal static class Program
         Run("held hotkey repeats stay consumed after settings change", HotkeyRepeatsAfterSettingsChange);
         Run("a different key passes while the original hotkey remains held", DifferentKeyWhileHotkeyHeldPasses);
         Run("capture messages include useful copied preview", CopiedMessageIncludesPreview);
+        Run("copied previews preserve Unicode text elements at the length limit", CopiedPreviewPreservesTextElements);
         Run("capture messages expose no-text, error and busy states", NonCopiedMessagesAreDeterministic);
         Run("clipboard retry succeeds after transient lock", ClipboardRetrySucceedsAfterTransientLock);
         Run("clipboard retry rethrows after final failure", ClipboardRetryRethrowsAfterFinalFailure);
@@ -128,6 +129,17 @@ internal static class Program
         Strings.Use("en");
         string message = CaptureMessageFormatter.Format(CaptureOutcome.Copied("hello\r\nworld"));
         True(message.Contains("hello world", StringComparison.Ordinal));
+    }
+
+    private static void CopiedPreviewPreservesTextElements()
+    {
+        Strings.Use("en");
+        string prefix = new string('a', 76);
+        foreach (string element in new[] { "😀", "e\u0301", "👩‍💻" })
+        {
+            Equal($"Copied: {prefix}...",
+                CaptureMessageFormatter.Format(CaptureOutcome.Copied(prefix + element + "suffix")));
+        }
     }
 
     private static void NonCopiedMessagesAreDeterministic()
