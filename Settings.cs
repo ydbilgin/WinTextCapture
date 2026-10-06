@@ -35,10 +35,35 @@ public sealed class Settings
         try
         {
             if (File.Exists(path))
-                return JsonSerializer.Deserialize<Settings>(File.ReadAllText(path)) ?? new Settings();
+            {
+                var settings = JsonSerializer.Deserialize<Settings>(File.ReadAllText(path)) ?? new Settings();
+                settings.Normalize();
+                return settings;
+            }
         }
         catch { /* fall through to defaults */ }
         return new Settings();
+    }
+
+    private void Normalize()
+    {
+        if (string.IsNullOrWhiteSpace(OcrLanguage)
+            || string.Equals(OcrLanguage, "auto", StringComparison.OrdinalIgnoreCase)
+            || !Windows.Globalization.Language.IsWellFormed(OcrLanguage))
+            OcrLanguage = "auto";
+
+        if (string.IsNullOrWhiteSpace(Language)) Language = "auto";
+        if (string.IsNullOrWhiteSpace(Theme)) Theme = "System";
+
+        if (!HotkeyBinding.FromSettings(this).IsValid)
+        {
+            var defaults = new Settings();
+            HotKey = defaults.HotKey;
+            ModCtrl = defaults.ModCtrl;
+            ModAlt = defaults.ModAlt;
+            ModShift = defaults.ModShift;
+            ModWin = defaults.ModWin;
+        }
     }
 
     public void Save()
