@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace WinTextCapture;
 
 /// <summary>Best-effort, bounded persistence for last-chance exception diagnostics.</summary>
