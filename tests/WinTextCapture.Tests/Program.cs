@@ -46,7 +46,8 @@ internal static class Program
         Run("settings replace explicit null preferences with defaults", SettingsNullPreferencesUseDefaults);
         Run("settings reject malformed OCR language tags", SettingsMalformedOcrTagUsesDefault);
         Run("settings recover an invalid shortcut without losing other preferences", SettingsInvalidShortcutUsesDefault);
-        Run("modifier-only and undefined trigger keys are invalid", ModifierAndUndefinedKeysAreInvalid);
+        Run("modifier-only and out-of-range trigger keys are invalid", ModifierAndOutOfRangeKeysAreInvalid);
+        Run("trigger keys without a named Keys value stay valid and survive load", UnnamedVirtualKeyStaysValid);
         Run("settings preserve valid preferences and recover broken JSON", SettingsValidAndBrokenJson);
         Run("settings action buttons do not overlap appearance controls", SettingsButtonsDoNotOverlapAppearance);
 
@@ -366,7 +367,7 @@ internal static class Program
         Equal("Dark", settings.Theme);
     }
 
-    private static void ModifierAndUndefinedKeysAreInvalid()
+    private static void ModifierAndOutOfRangeKeysAreInvalid()
     {
         foreach (var key in new[] { Keys.ControlKey, Keys.LControlKey, Keys.RControlKey,
             Keys.ShiftKey, Keys.LShiftKey, Keys.RShiftKey, Keys.Menu, Keys.LMenu, Keys.RMenu,
@@ -374,6 +375,19 @@ internal static class Program
         {
             True(!new HotkeyBinding(key, Ctrl: true, Alt: false, Shift: false, Win: false).IsValid);
         }
+    }
+
+    private static void UnnamedVirtualKeyStaysValid()
+    {
+        // 0xC1 has no named Keys value, but the hook compares raw virtual-key codes, so it must stay bindable.
+        var binding = new HotkeyBinding((Keys)0xC1, Ctrl: true, Alt: false, Shift: false, Win: false);
+        True(binding.IsValid);
+        var state = new KeyboardHookState();
+        Equal(HookAction.Trigger, state.Evaluate(binding, (Keys)0xC1, keyDown: true, keyUp: false, ctrl: true, alt: false, shift: false, win: false));
+
+        var settings = LoadSettingsFixture("{\"HotKey\":193,\"ModCtrl\":true}");
+        Equal(193, (int)settings.HotKey);
+        True(settings.ModCtrl);
     }
 
     private static void SettingsValidAndBrokenJson()

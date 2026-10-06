@@ -6,7 +6,6 @@ internal readonly record struct HotkeyBinding(Keys Key, bool Ctrl, bool Alt, boo
         new(settings.HotKey, settings.ModCtrl, settings.ModAlt, settings.ModShift, settings.ModWin);
 
     public bool IsValid => (int)Key is > 0 and <= 0xFE
-        && Enum.IsDefined(Key)
         && Key is not (Keys.ControlKey or Keys.LControlKey or Keys.RControlKey
             or Keys.ShiftKey or Keys.LShiftKey or Keys.RShiftKey
             or Keys.Menu or Keys.LMenu or Keys.RMenu or Keys.LWin or Keys.RWin)
