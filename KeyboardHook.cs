@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace WinTextCapture;
@@ -23,7 +22,6 @@ internal sealed class KeyboardHook : IDisposable
     {
         if (_hook != IntPtr.Zero) return true;
 
-        using var curProcess = Process.GetCurrentProcess();
         _hook = Native.SetWindowsHookEx(Native.WH_KEYBOARD_LL, _proc, Native.GetModuleHandle(null), 0);
         return _hook != IntPtr.Zero;
     }
