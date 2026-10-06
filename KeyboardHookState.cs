@@ -35,11 +35,11 @@ internal sealed class KeyboardHookState
             return HookAction.Pass;
         }
 
+        if (_activeKey != Keys.None)
+            return key == _activeKey ? HookAction.Consume : HookAction.Pass;
+
         if (!binding.Matches(key, ctrl, alt, shift, win))
             return HookAction.Pass;
-
-        if (_activeKey != Keys.None)
-            return HookAction.Consume;
 
         _activeKey = key;
         return HookAction.Trigger;

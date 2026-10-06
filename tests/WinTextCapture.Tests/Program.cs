@@ -16,6 +16,9 @@ internal static class Program
         Run("wrong modifiers pass through", WrongModifiersPass);
         Run("invalid binding passes through", InvalidBindingPasses);
         Run("key-up resets even if settings changed while held", SettingsChangeWhileHeldResets);
+        Run("held hotkey repeats stay consumed after modifiers are released", HotkeyRepeatsAfterModifierRelease);
+        Run("held hotkey repeats stay consumed after settings change", HotkeyRepeatsAfterSettingsChange);
+        Run("a different key passes while the original hotkey remains held", DifferentKeyWhileHotkeyHeldPasses);
         Run("capture messages include useful copied preview", CopiedMessageIncludesPreview);
         Run("capture messages expose no-text, error and busy states", NonCopiedMessagesAreDeterministic);
         Run("clipboard retry succeeds after transient lock", ClipboardRetrySucceedsAfterTransientLock);
@@ -72,6 +75,39 @@ internal static class Program
         Equal(HookAction.Trigger, state.Evaluate(oldBinding, Keys.T, keyDown: true, keyUp: false, ctrl: false, alt: false, shift: true, win: true));
         Equal(HookAction.Consume, state.Evaluate(newBinding, Keys.T, keyDown: false, keyUp: true, ctrl: false, alt: false, shift: false, win: false));
         Equal(HookAction.Trigger, state.Evaluate(newBinding, Keys.Y, keyDown: true, keyUp: false, ctrl: false, alt: false, shift: true, win: true));
+    }
+
+    private static void HotkeyRepeatsAfterModifierRelease()
+    {
+        var state = new KeyboardHookState();
+        var binding = new HotkeyBinding(Keys.T, Ctrl: false, Alt: false, Shift: true, Win: true);
+        Equal(HookAction.Trigger, state.Evaluate(binding, Keys.T, true, false, false, false, true, true));
+        Equal(HookAction.Consume, state.Evaluate(binding, Keys.T, true, false, false, false, false, false));
+        Equal(HookAction.Consume, state.Evaluate(binding, Keys.T, false, true, false, false, false, false));
+        Equal(HookAction.Pass, state.Evaluate(binding, Keys.T, true, false, false, false, false, false));
+    }
+
+    private static void HotkeyRepeatsAfterSettingsChange()
+    {
+        var state = new KeyboardHookState();
+        var oldBinding = new HotkeyBinding(Keys.T, Ctrl: false, Alt: false, Shift: true, Win: true);
+        var newBinding = new HotkeyBinding(Keys.Y, Ctrl: false, Alt: false, Shift: true, Win: true);
+        Equal(HookAction.Trigger, state.Evaluate(oldBinding, Keys.T, true, false, false, false, true, true));
+        Equal(HookAction.Consume, state.Evaluate(newBinding, Keys.T, true, false, false, false, true, true));
+        Equal(HookAction.Consume, state.Evaluate(newBinding, Keys.T, false, true, false, false, false, false));
+        Equal(HookAction.Trigger, state.Evaluate(newBinding, Keys.Y, true, false, false, false, true, true));
+    }
+
+    private static void DifferentKeyWhileHotkeyHeldPasses()
+    {
+        var state = new KeyboardHookState();
+        var oldBinding = new HotkeyBinding(Keys.T, Ctrl: false, Alt: false, Shift: true, Win: true);
+        var newBinding = new HotkeyBinding(Keys.Y, Ctrl: false, Alt: false, Shift: true, Win: true);
+        Equal(HookAction.Trigger, state.Evaluate(oldBinding, Keys.T, true, false, false, false, true, true));
+        Equal(HookAction.Pass, state.Evaluate(newBinding, Keys.Y, true, false, false, false, true, true));
+        Equal(HookAction.Pass, state.Evaluate(newBinding, Keys.Y, false, true, false, false, true, true));
+        Equal(HookAction.Consume, state.Evaluate(newBinding, Keys.T, false, true, false, false, false, false));
+        Equal(HookAction.Trigger, state.Evaluate(newBinding, Keys.Y, true, false, false, false, true, true));
     }
 
     private static void CopiedMessageIncludesPreview()
