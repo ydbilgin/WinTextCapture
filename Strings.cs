@@ -39,8 +39,6 @@ public static class Strings
     public static string ThemeSystem => G("ThemeSystem");
     public static string ThemeLight => G("ThemeLight");
     public static string ThemeDark => G("ThemeDark");
-    public static string AboutHead => G("AboutHead");
-    public static string AboutBody => G("AboutBody");
     public static string Save => G("Save");
     public static string Cancel => G("Cancel");
     public static string ValidationPickKey => G("ValidationPickKey");
@@ -83,8 +81,6 @@ public static class Strings
         ["ThemeSystem"] = "Follow system",
         ["ThemeLight"] = "Light",
         ["ThemeDark"] = "Dark",
-        ["AboutHead"] = "About",
-        ["AboutBody"] = "Press the hotkey, drag a box over any text, release — the text is copied to your clipboard. Press Esc to cancel.",
         ["Save"] = "Save",
         ["Cancel"] = "Cancel",
         ["ValidationPickKey"] = "Please pick a key and at least one modifier (Ctrl / Alt / Shift / Win).",
@@ -124,8 +120,6 @@ public static class Strings
         ["ThemeSystem"] = "Sisteme uy",
         ["ThemeLight"] = "Açık",
         ["ThemeDark"] = "Koyu",
-        ["AboutHead"] = "Hakkında",
-        ["AboutBody"] = "Kısayola basın, metnin üzerine bir kutu çizin, bırakın — metin panoya kopyalanır. İptal için Esc.",
         ["Save"] = "Kaydet",
         ["Cancel"] = "İptal",
         ["ValidationPickKey"] = "Lütfen bir tuş ve en az bir değiştirici (Ctrl / Alt / Shift / Win) seçin.",
