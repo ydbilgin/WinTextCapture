@@ -32,7 +32,7 @@ internal static class Native
     public static extern short GetAsyncKeyState(int vKey);
 
     // virtual-key codes used for modifier polling
-    public const int VK_SHIFT = 0x10, VK_CONTROL = 0x11, VK_MENU = 0x12, VK_LWIN = 0x5B, VK_RWIN = 0x5C, VK_LCONTROL = 0xA2, VK_RCONTROL = 0xA3;
+    public const int VK_SHIFT = 0x10, VK_CONTROL = 0x11, VK_MENU = 0x12, VK_LWIN = 0x5B, VK_RWIN = 0x5C, VK_LCONTROL = 0xA2;
 
     public static bool IsDown(int vk) => (GetAsyncKeyState(vk) & 0x8000) != 0;
 

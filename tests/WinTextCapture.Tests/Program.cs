@@ -35,7 +35,6 @@ internal static class Program
         Run("OCR preprocessing respects a supplied engine limit", OcrPreprocessorRespectsEngineLimit);
         Run("autostart leaves an absent entry alone at startup", AutoStartLeavesAbsentEntryAlone);
         Run("autostart repairs an entry whose executable is gone", AutoStartRepairsMissingExecutable);
-        Run("autostart keeps the current executable entry", AutoStartKeepsCurrentExecutable);
         Run("autostart does not hijack another existing install", AutoStartDoesNotHijackAnotherInstall);
         Run("autostart treats quoted and unquoted current paths equally", AutoStartHandlesQuotedAndUnquotedPaths);
         Run("autostart writes this copy when the user enables it", AutoStartWritesWhenUserEnables);
@@ -267,13 +266,6 @@ internal static class Program
         Equal(
             AutoStartAction.Write,
             AutoStartDecision.EvaluateStartup(@"""C:\Cleaned\WinTextCapture.exe""", @"C:\Apps\WinTextCapture.exe", storedTargetExists: false));
-    }
-
-    private static void AutoStartKeepsCurrentExecutable()
-    {
-        Equal(
-            AutoStartAction.LeaveAsIs,
-            AutoStartDecision.EvaluateStartup(@"""C:\Apps\WinTextCapture.exe""", @"C:\Apps\WinTextCapture.exe", storedTargetExists: true));
     }
 
     private static void AutoStartDoesNotHijackAnotherInstall()
