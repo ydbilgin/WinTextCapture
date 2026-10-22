@@ -68,6 +68,9 @@ internal static class Program
         Run("settings buttons take their colours from the theme", SettingsButtonsFollowTheme);
         Run("hotkey field shows key chips and updates from key presses", HotkeyFieldShowsChips);
         Run("hotkey field keeps Tab, Enter, Esc and Alt as dialog keys", HotkeyFieldKeyRouting);
+        Run("menu hotkey text is the compact current combo", MenuHotkeyText);
+        Run("tray menu keeps its items and actions and shows the hotkey", TrayMenuItemsAndHotkey);
+        Run("tray menu renderer takes its colours from the theme", TrayMenuRendererColours);
 
         Console.WriteLine($"Passed: {_passed}");
         Console.WriteLine($"Failed: {_failed}");
@@ -717,6 +720,59 @@ internal static class Program
         True(Input(Keys.T | Keys.Shift));
         True(Input(Keys.Left));
         True(Input(Keys.F5 | Keys.Control));
+    }
+
+    private static void MenuHotkeyText()
+    {
+        Equal("Shift+Win+T", new Settings().HotKeyShortText());
+        Equal("Ctrl+Alt+F9", new Settings { HotKey = Keys.F9, ModCtrl = true, ModAlt = true, ModShift = false, ModWin = false }.HotKeyShortText());
+    }
+
+    private static void TrayMenuItemsAndHotkey()
+    {
+        var calls = new List<string>();
+        var menu = new TrayMenu(() => calls.Add("capture"), () => calls.Add("settings"), () => calls.Add("about"), () => calls.Add("exit"));
+        using var strip = menu.Strip;
+        foreach (string language in new[] { "en", "tr" })
+        {
+            Strings.Use(language);
+            menu.ApplyText(new Settings { HotKey = Keys.Y, ModCtrl = true, ModShift = false, ModWin = false });
+            Equal(Strings.MenuCapture, menu.CaptureItem.Text);
+            Equal("Ctrl+Y", menu.CaptureItem.ShortcutKeyDisplayString);
+            True(menu.CaptureItem.ShowShortcutKeys);
+            Equal(Keys.None, menu.CaptureItem.ShortcutKeys);   // display only; the global hook owns the key
+        }
+        Strings.Use("en");
+        Equal("ToolStripMenuItem|ToolStripSeparator|ToolStripMenuItem|ToolStripMenuItem|ToolStripSeparator|ToolStripMenuItem",
+            string.Join("|", strip.Items.Cast<ToolStripItem>().Select(i => i.GetType().Name)));
+        foreach (ToolStripItem item in strip.Items)
+            item.PerformClick();
+        Equal("capture|settings|about|exit", string.Join("|", calls));
+    }
+
+    private static void TrayMenuRendererColours()
+    {
+        foreach (var theme in new[] { Theme.Dark, Theme.Light })
+        {
+            var colors = ThemedMenuRenderer.For(theme);
+            Equal(theme.Surface, colors.Back);
+            Equal(theme.Text, colors.Text);
+            Equal(theme.Subtle, colors.Shortcut);
+            Equal(theme.AccentWeak, colors.Hover);
+
+            var menu = new TrayMenu(() => { }, () => { }, () => { }, () => { });
+            using var strip = menu.Strip;
+            menu.ApplyTheme(theme);
+            using var bitmap = new Bitmap(120, 60);
+            using (var g = Graphics.FromImage(bitmap))
+            {
+                var bounds = new Rectangle(0, 0, 120, 60);
+                strip.Renderer.DrawToolStripBackground(new ToolStripRenderEventArgs(g, strip, bounds, Color.Empty));
+                strip.Renderer.DrawToolStripBorder(new ToolStripRenderEventArgs(g, strip, bounds, Color.Empty));
+            }
+            Equal(theme.Surface.ToArgb(), bitmap.GetPixel(60, 30).ToArgb());
+            Equal(theme.BorderStrong.ToArgb(), bitmap.GetPixel(0, 30).ToArgb());
+        }
     }
 
     private static void Run(string name, Action test)

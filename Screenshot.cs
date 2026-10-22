@@ -41,6 +41,32 @@ internal static class Screenshot
         form.Close();
     }
 
+    /// <summary>The tray menu with its first item highlighted, drawn by the same renderer the tray uses.</summary>
+    public static void CaptureTrayMenu(string path, string? themeOverride = null, string lang = "en")
+    {
+        var s = PublicSettings(themeOverride, lang);
+        Strings.Use(s.Language);
+        var menu = new TrayMenu(() => { }, () => { }, () => { }, () => { });
+        menu.ApplyText(s);
+        menu.ApplyTheme(Theming.Resolve(s.Theme));
+        using var strip = menu.Strip;
+        strip.Show(new Point(7000, 3000));
+        menu.CaptureItem.Select();
+        for (int i = 0; i < 4; i++) { Application.DoEvents(); System.Threading.Thread.Sleep(30); }
+        strip.Refresh();
+        Save(strip, path);
+        strip.Close();
+    }
+
+    private static void Save(Control control, string path)
+    {
+        using var bmp = new Bitmap(control.Width, control.Height);
+        control.DrawToBitmap(bmp, new Rectangle(0, 0, control.Width, control.Height));
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+        bmp.Save(path, ImageFormat.Png);
+    }
+
     /// <summary>
     /// Default settings (Win + Shift + T, automatic OCR language) with only the requested theme and UI
     /// language, so documentation pictures never show the local user's own preferences.

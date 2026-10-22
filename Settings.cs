@@ -96,4 +96,7 @@ public sealed class Settings
         if (HotKey != Keys.None) parts.Add(HotKey.ToString());
         return parts.Count == 0 ? "(none)" : string.Join(" + ", parts);
     }
+
+    /// <summary>Compact combo for menus, e.g. "Shift+Win+T".</summary>
+    public string HotKeyShortText() => HotKeyText().Replace(" + ", "+", StringComparison.Ordinal);
 }
