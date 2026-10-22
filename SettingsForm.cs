@@ -3,7 +3,7 @@ namespace WinTextCapture;
 internal sealed class SettingsForm : Form
 {
     private readonly List<OcrLanguageOption> _ocrOptions;
-    private readonly TextBox _hotkeyBox;
+    private readonly HotkeyField _hotkeyBox;
     private readonly ComboBox _ocrCombo;
     private readonly CheckBox _autoStart;
     private readonly ComboBox _langCombo;
@@ -34,30 +34,32 @@ internal sealed class SettingsForm : Form
         StartPosition = FormStartPosition.CenterScreen;
         Font = new Font("Segoe UI", 9f);
 
-        var headFont = new Font("Segoe UI Semibold", 9f);
-        int y = 18;
+        // Layout on an 8 px grid: 24 px margins, a 24 px header slot, 8 px from header to its row,
+        // 24 px between sections. Same fields and order as before.
+        const int Margin = 24, ContentWidth = 416, RowHeight = 32;
+        var headFont = new Font("Segoe UI Semibold", 10f);
+        int y = Margin;
 
-        Controls.Add(new Label { Text = Strings.HotkeyHead, AutoSize = true, Left = 18, Top = y, Font = headFont, Tag = "head" });
-        y += 22;
-        Controls.Add(new Label { Text = Strings.HotkeyHint, Left = 18, Top = y, Width = 400, Height = 36, Tag = "subtle" });
+        Controls.Add(Head(Strings.HotkeyHead, y, headFont));
+        y += 24;
+        Controls.Add(new Label { Text = Strings.HotkeyHint, Left = Margin, Top = y, Width = ContentWidth, Height = 40, Tag = "subtle" });
         y += 40;
 
-        _hotkeyBox = new TextBox
+        _hotkeyBox = new HotkeyField
         {
-            Left = 18,
+            Left = Margin,
             Top = y,
-            Width = 292,
-            Height = 26,
-            ReadOnly = true,
-            Cursor = Cursors.Hand,
-            TextAlign = HorizontalAlignment.Center,
-            Font = new Font("Segoe UI Semibold", 9.5f),
-            BorderStyle = BorderStyle.FixedSingle
+            Width = 304,
+            Height = RowHeight,
+            Font = new Font("Segoe UI Semibold", 9f),
+            Placeholder = Strings.HotkeyPressKeys,
+            ListeningText = Strings.HotkeyListening,
+            AccessibleName = Strings.HotkeyHead,
         };
         _hotkeyBox.KeyDown += HotkeyBox_KeyDown;
         Controls.Add(_hotkeyBox);
 
-        var clear = new Button { Text = Strings.Clear, Left = 320, Top = y - 1, Width = 100, Height = 28, FlatStyle = FlatStyle.Flat };
+        var clear = new ThemedButton { Text = Strings.Clear, Left = Margin + 304 + 8, Top = y, Width = 104, Height = RowHeight };
         clear.Click += (s, e) =>
         {
             _ctrl = _alt = _shift = _win = false;
@@ -65,53 +67,71 @@ internal sealed class SettingsForm : Form
             UpdateHotkeyText();
         };
         Controls.Add(clear);
-        y += 48;
+        y += RowHeight + 24;
 
-        Controls.Add(new Label { Text = Strings.OcrHead, AutoSize = true, Left = 18, Top = y, Font = headFont, Tag = "head" });
-        y += 26;
-        Controls.Add(new Label { Text = Strings.OcrLangLabel, AutoSize = true, Left = 18, Top = y + 4, Tag = "subtle" });
-        _ocrCombo = new ComboBox { Left = 172, Top = y, Width = 248, Height = 24, DropDownStyle = ComboBoxStyle.DropDownList };
+        Controls.Add(Head(Strings.OcrHead, y, headFont));
+        y += 32;
+        Controls.Add(RowLabel(Strings.OcrLangLabel, Margin, y, 168));
+        _ocrCombo = new ThemedComboBox { Left = 200, Top = y, Width = 240 };
         _ocrCombo.Items.AddRange(_ocrOptions.Cast<object>().ToArray());
         int ocrIndex = _ocrOptions.FindIndex(o => o.Tag.Equals(settings.OcrLanguage, StringComparison.OrdinalIgnoreCase));
         _ocrCombo.SelectedIndex = ocrIndex >= 0 ? ocrIndex : 0;
         Controls.Add(_ocrCombo);
-        y += 46;
+        y += RowHeight + 24;
 
-        Controls.Add(new Label { Text = Strings.GeneralHead, AutoSize = true, Left = 18, Top = y, Font = headFont, Tag = "head" });
-        y += 26;
-        _autoStart = new CheckBox { Text = Strings.StartWithWindows, Left = 18, Top = y, Width = 360, Height = 22, Checked = autoStartEnabled };
+        Controls.Add(Head(Strings.GeneralHead, y, headFont));
+        y += 32;
+        _autoStart = new ThemedCheckBox { Text = Strings.StartWithWindows, Left = Margin, Top = y, Width = ContentWidth, Height = RowHeight, Checked = autoStartEnabled };
         Controls.Add(_autoStart);
-        y += 46;
+        y += RowHeight + 24;
 
-        Controls.Add(new Label { Text = Strings.AppearanceHead, AutoSize = true, Left = 18, Top = y, Font = headFont, Tag = "head" });
-        y += 26;
-        Controls.Add(new Label { Text = Strings.LanguageLabel, AutoSize = true, Left = 18, Top = y + 4, Tag = "subtle" });
-        Controls.Add(new Label { Text = Strings.ThemeLabel, AutoSize = true, Left = 220, Top = y + 4, Tag = "subtle" });
-        y += 22;
+        Controls.Add(Head(Strings.AppearanceHead, y, headFont));
+        y += 32;
+        Controls.Add(new Label { Text = Strings.LanguageLabel, AutoSize = false, Left = Margin, Top = y, Width = 200, Height = 20, Tag = "subtle" });
+        Controls.Add(new Label { Text = Strings.ThemeLabel, AutoSize = false, Left = 240, Top = y, Width = 200, Height = 20, Tag = "subtle" });
+        y += 24;
 
-        _langCombo = new ComboBox { Left = 18, Top = y, Width = 180, Height = 24, DropDownStyle = ComboBoxStyle.DropDownList };
+        _langCombo = new ThemedComboBox { Left = Margin, Top = y, Width = 200 };
         _langCombo.Items.AddRange(new object[] { Strings.LangAuto, "English", "Türkçe" });
         _langCombo.SelectedIndex = settings.Language switch { "en" => 1, "tr" => 2, _ => 0 };
         Controls.Add(_langCombo);
 
-        _themeCombo = new ComboBox { Left = 220, Top = y, Width = 200, Height = 24, DropDownStyle = ComboBoxStyle.DropDownList };
+        _themeCombo = new ThemedComboBox { Left = 240, Top = y, Width = 200 };
         _themeCombo.Items.AddRange(new object[] { Strings.ThemeSystem, Strings.ThemeLight, Strings.ThemeDark });
         _themeCombo.SelectedIndex = settings.Theme switch { "Light" => 1, "Dark" => 2, _ => 0 };
         _themeCombo.SelectedIndexChanged += (s, e) => ApplyThemeLive();
         Controls.Add(_themeCombo);
-        y += 42;
-        ClientSize = new Size(440, y + 48);
+        y += RowHeight + 24;
 
-        var cancel = new Button { Text = Strings.Cancel, Left = 324, Top = y, Width = 96, Height = 30, FlatStyle = FlatStyle.Flat, DialogResult = DialogResult.Cancel };
-        var ok = new Button { Text = Strings.Save, Left = 220, Top = y, Width = 96, Height = 30, FlatStyle = FlatStyle.Flat, Tag = "primary", DialogResult = DialogResult.OK };
+        _footerTop = y;
+        y += 16;
+        var ok = new ThemedButton { Text = Strings.Save, Left = 240, Top = y, Width = 96, Height = RowHeight, Role = ThemedButtonRole.Primary, DialogResult = DialogResult.OK };
+        var cancel = new ThemedButton { Text = Strings.Cancel, Left = 344, Top = y, Width = 96, Height = RowHeight, DialogResult = DialogResult.Cancel };
         ok.Click += Ok_Click;
         Controls.Add(ok);
         Controls.Add(cancel);
+        y += RowHeight + Margin;
+        ClientSize = new Size(Margin * 2 + ContentWidth, y);
 
         AcceptButton = ok;
         CancelButton = cancel;
         UpdateHotkeyText();
         ApplyThemeLive();
+    }
+
+    private readonly int _footerTop;
+
+    private static Label Head(string text, int top, Font font) =>
+        new() { Text = text, AutoSize = false, Left = 24, Top = top, Width = 416, Height = 24, Font = font, TextAlign = ContentAlignment.MiddleLeft };
+
+    private static Label RowLabel(string text, int left, int top, int width) =>
+        new() { Text = text, AutoSize = false, Left = left, Top = top, Width = width, Height = 32, TextAlign = ContentAlignment.MiddleLeft, Tag = "subtle" };
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        base.OnPaint(e);
+        using var rule = new Pen(SelectedTheme().Border);
+        e.Graphics.DrawLine(rule, 0, _footerTop, ClientSize.Width, _footerTop);
     }
 
     private void HotkeyBox_KeyDown(object? sender, KeyEventArgs e)
@@ -150,6 +170,7 @@ internal sealed class SettingsForm : Form
         if (_shift) parts.Add("Shift");
         if (_win) parts.Add("Win");
         if (_key != Keys.None) parts.Add(_key.ToString());
+        _hotkeyBox.Parts = parts;
         _hotkeyBox.Text = parts.Count == 0 ? Strings.HotkeyPressKeys : string.Join(" + ", parts);
     }
 

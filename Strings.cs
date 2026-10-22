@@ -26,6 +26,7 @@ public static class Strings
     public static string HotkeyHead => G("HotkeyHead");
     public static string HotkeyHint => G("HotkeyHint");
     public static string HotkeyPressKeys => G("HotkeyPressKeys");
+    public static string HotkeyListening => G("HotkeyListening");
     public static string Clear => G("Clear");
     public static string OcrHead => G("OcrHead");
     public static string OcrLangLabel => G("OcrLangLabel");
@@ -70,6 +71,7 @@ public static class Strings
         ["HotkeyHead"] = "Capture hotkey",
         ["HotkeyHint"] = "Click the box, then press your key combo. It overrides Windows' own shortcut.",
         ["HotkeyPressKeys"] = "(press keys)",
+        ["HotkeyListening"] = "Press keys",
         ["Clear"] = "Clear",
         ["OcrHead"] = "OCR",
         ["OcrLangLabel"] = "Recognition language",
@@ -110,6 +112,7 @@ public static class Strings
         ["HotkeyHead"] = "Yakalama kısayolu",
         ["HotkeyHint"] = "Kutuya tıklayın, sonra tuş kombinasyonuna basın. Windows'un kendi kısayolunu ezer.",
         ["HotkeyPressKeys"] = "(tuşlara basın)",
+        ["HotkeyListening"] = "Tuşlara basın",
         ["Clear"] = "Temizle",
         ["OcrHead"] = "OCR",
         ["OcrLangLabel"] = "Tanıma dili",
@@ -144,4 +147,8 @@ public static class Strings
     };
 
     private static Dictionary<string, string> _t = En;
+
+    /// <summary>Keys present in one language table but not the other (tests keep this empty).</summary>
+    internal static IReadOnlyList<string> MissingKeys() =>
+        En.Keys.Except(Tr.Keys).Concat(Tr.Keys.Except(En.Keys)).ToList();
 }
