@@ -100,15 +100,16 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
         if (!string.IsNullOrEmpty(message))
         {
-            ShowToast(message);
+            if (CaptureMessageFormatter.Toast(outcome) is { } toast)
+                ShowToast(toast);
             _tray.ShowBalloonTip(1600, App.Name, message, outcome.Status == CaptureStatus.Error ? ToolTipIcon.Warning : ToolTipIcon.Info);
         }
     }
 
-    private void ShowToast(string message)
+    private void ShowToast(ToastContent content)
     {
         _toast?.Close();
-        _toast = new ToastForm(message, Theming.Resolve(_settings.Theme));
+        _toast = new ToastForm(content, Theming.Resolve(_settings.Theme));
         _toast.FormClosed += (s, e) =>
         {
             if (ReferenceEquals(_toast, s))

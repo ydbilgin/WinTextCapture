@@ -60,7 +60,8 @@ internal static class Screenshot
 
     /// <summary>
     /// The capture overlay over a synthetic document (never a screen grab), with a selection drawn the
-    /// way a drag draws it. The overlay window is never shown; its paint routine renders into a bitmap.
+    /// way a drag draws it. The overlay window is never shown: DrawToBitmap runs its own paint routine
+    /// into a screen-compatible bitmap, the same path the settings picture uses.
     /// </summary>
     public static void CaptureOverlay(string path, string? themeOverride = null, string lang = "en")
     {
@@ -71,18 +72,52 @@ internal static class Screenshot
         var client = new Rectangle(Point.Empty, background.Size);
         overlay.HintArea = client;
         overlay.PreviewSelection(new Rectangle(196, 234, 560, 108));
-        // 24-bit targets: GDI text drawn on 32-bit bitmaps loses its alpha and prints as dark fringes.
-        using var bmp = new Bitmap(background.Width, background.Height, PixelFormat.Format24bppRgb);
+        using var bmp = new Bitmap(client.Width, client.Height);
+        overlay.DrawToBitmap(bmp, client);
+        SavePng(bmp, path);
+    }
+
+    /// <summary>
+    /// The result toast for a synthetic "copied" or "notext" outcome on a plain backdrop. The toast is
+    /// never shown: DrawToBitmap runs its paint routine, then the card is cut to its rounded outline
+    /// (Windows 11 rounds the real window the same way).
+    /// </summary>
+    public static void CaptureToast(string path, string? themeOverride, string lang, string? variant)
+    {
+        var s = PublicSettings(themeOverride, lang);
+        Strings.Use(s.Language);
+        var theme = Theming.Resolve(s.Theme);
+        var outcome = variant == "notext"
+            ? CaptureOutcome.NoText
+            : CaptureOutcome.Copied(s.Language == "tr"
+                ? "Fatura numarası: TR-2026-0418\nTeslim tarihi: 14 Kasım, sabah 10:30"
+                : "Invoice number: INV-2026-0418\nDelivery date: 14 November, 10:30 am");
+        var content = CaptureMessageFormatter.Toast(outcome)!;
+        using var toast = new ToastForm(content, theme);
+        var size = toast.ClientSize;
+        using var card = new Bitmap(size.Width, size.Height);
+        toast.DrawToBitmap(card, new Rectangle(Point.Empty, size));
+
+        const int margin = 24;
+        using var bmp = new Bitmap(size.Width + margin * 2, size.Height + margin * 2);
         using (var g = Graphics.FromImage(bmp))
-            overlay.PaintOverlay(g, client);
+        {
+            g.Clear(theme.IsDark ? Color.FromArgb(52, 60, 72) : Color.FromArgb(214, 220, 228));
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            using var outline = Theming.Rounded(new Rectangle(new Point(margin, margin), size), toast.CornerRadius);
+            using var brush = new TextureBrush(card);
+            brush.TranslateTransform(margin, margin);
+            g.FillPath(brush, outline);
+        }
         SavePng(bmp, path);
     }
 
     private static Bitmap SyntheticDesktop(bool turkish)
     {
-        var bmp = new Bitmap(960, 540, PixelFormat.Format24bppRgb);
+        var bmp = new Bitmap(960, 540);
         using var g = Graphics.FromImage(bmp);
         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
         g.Clear(Color.FromArgb(38, 70, 110));
         var page = new Rectangle(160, 96, 640, 400);
         using (var shadow = new SolidBrush(Color.FromArgb(60, 0, 0, 0))) g.FillRectangle(shadow, page with { X = page.X + 4, Y = page.Y + 6 });
@@ -91,15 +126,15 @@ internal static class Screenshot
         using var titleFont = new Font("Segoe UI", 10f);
         using var headFont = new Font("Segoe UI Semibold", 15f);
         using var bodyFont = new Font("Segoe UI", 11f);
-        TextRenderer.DrawText(g, turkish ? "notlar.txt - Not Defteri" : "notes.txt - Notepad", titleFont, new Point(page.X + 14, page.Y + 9), Color.FromArgb(60, 64, 70));
-        TextRenderer.DrawText(g, turkish ? "Toplantı notları" : "Meeting notes", headFont, new Point(page.X + 36, page.Y + 64), Color.FromArgb(25, 28, 33));
+        using (var ink = new SolidBrush(Color.FromArgb(60, 64, 70))) g.DrawString(turkish ? "notlar.txt - Not Defteri" : "notes.txt - Notepad", titleFont, ink, new Point(page.X + 14, page.Y + 9));
+        using (var ink = new SolidBrush(Color.FromArgb(25, 28, 33))) g.DrawString(turkish ? "Toplantı notları" : "Meeting notes", headFont, ink, new Point(page.X + 36, page.Y + 64));
         string[] lines = turkish
             ? new[] { "Fatura numarası: TR-2026-0418", "Teslim tarihi: 14 Kasım, sabah 10:30", "Adres: Atatürk Cad. No 12, İzmir" }
             : new[] { "Invoice number: INV-2026-0418", "Delivery date: 14 November, 10:30 am", "Address: 12 Harbour Street, Portsmouth" };
         int y = page.Y + 148;
         foreach (string line in lines)
         {
-            TextRenderer.DrawText(g, line, bodyFont, new Point(page.X + 44, y), Color.FromArgb(40, 44, 52));
+            using (var ink = new SolidBrush(Color.FromArgb(40, 44, 52))) g.DrawString(line, bodyFont, ink, new Point(page.X + 44, y));
             y += 36;
         }
         return bmp;

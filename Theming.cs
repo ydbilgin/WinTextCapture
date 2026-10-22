@@ -7,7 +7,8 @@ namespace WinTextCapture;
 internal readonly record struct Theme(
     Color Back, Color Surface, Color Surface2, Color Text, Color Subtle, Color Faint,
     Color Accent, Color AccentWeak, Color Border, Color BorderStrong,
-    Color Chip, Color ChipText, Color FocusRing, Color DisabledSurface)
+    Color Chip, Color ChipText, Color FocusRing, Color DisabledSurface,
+    Color Success, Color Warning)
 {
     public bool IsDark => Back.R < 128;
 
@@ -21,7 +22,8 @@ internal readonly record struct Theme(
         Accent: Color.FromArgb(53, 111, 214), AccentWeak: Color.FromArgb(231, 238, 251),
         Border: Color.FromArgb(210, 216, 224), BorderStrong: Color.FromArgb(183, 192, 203),
         Chip: Color.FromArgb(232, 236, 242), ChipText: Color.FromArgb(45, 52, 63),
-        FocusRing: Color.FromArgb(169, 196, 242), DisabledSurface: Color.FromArgb(238, 241, 245));
+        FocusRing: Color.FromArgb(169, 196, 242), DisabledSurface: Color.FromArgb(238, 241, 245),
+        Success: Color.FromArgb(16, 137, 62), Warning: Color.FromArgb(214, 140, 0));
 
     public static readonly Theme Dark = new(
         Back: Color.FromArgb(23, 27, 33), Surface: Color.FromArgb(29, 34, 42),
@@ -30,7 +32,8 @@ internal readonly record struct Theme(
         Accent: Color.FromArgb(116, 160, 242), AccentWeak: Color.FromArgb(37, 51, 74),
         Border: Color.FromArgb(54, 63, 75), BorderStrong: Color.FromArgb(81, 93, 108),
         Chip: Color.FromArgb(48, 57, 70), ChipText: Color.FromArgb(222, 227, 235),
-        FocusRing: Color.FromArgb(63, 93, 137), DisabledSurface: Color.FromArgb(25, 30, 37));
+        FocusRing: Color.FromArgb(63, 93, 137), DisabledSurface: Color.FromArgb(25, 30, 37),
+        Success: Color.FromArgb(92, 199, 120), Warning: Color.FromArgb(240, 180, 70));
 
     public static readonly Theme HighContrast = new(
         Back: SystemColors.Window, Surface: SystemColors.Window, Surface2: SystemColors.Window,
@@ -38,7 +41,8 @@ internal readonly record struct Theme(
         Accent: SystemColors.Highlight, AccentWeak: SystemColors.Window,
         Border: SystemColors.WindowText, BorderStrong: SystemColors.WindowText,
         Chip: SystemColors.Control, ChipText: SystemColors.ControlText,
-        FocusRing: SystemColors.Highlight, DisabledSurface: SystemColors.Control);
+        FocusRing: SystemColors.Highlight, DisabledSurface: SystemColors.Control,
+        Success: SystemColors.Highlight, Warning: SystemColors.WindowText);
 }
 
 internal enum ThemedButtonRole { Primary, Secondary }

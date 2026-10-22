@@ -10,6 +10,8 @@ internal enum CaptureStatus
     Busy
 }
 
+internal sealed record ToastContent(string Title, string Body, bool Success);
+
 internal sealed record CaptureOutcome(CaptureStatus Status, string? Text = null)
 {
     public static readonly CaptureOutcome Cancelled = new(CaptureStatus.Cancelled);
