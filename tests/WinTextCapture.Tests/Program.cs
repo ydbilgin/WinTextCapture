@@ -71,6 +71,10 @@ internal static class Program
         Run("menu hotkey text is the compact current combo", MenuHotkeyText);
         Run("tray menu keeps its items and actions and shows the hotkey", TrayMenuItemsAndHotkey);
         Run("tray menu renderer takes its colours from the theme", TrayMenuRendererColours);
+        Run("OCR input is the clean screenshot crop without hint or outline pixels", OcrInputHasNoOverlayPixels);
+        Run("overlay outline and size badge use the theme accent", OverlayOutlineUsesThemeAccent);
+        Run("size badge stays on screen next to the selection", OverlayBadgePlacement);
+        Run("hint pill sits at the top of the monitor under the cursor", OverlayHintPlacement);
 
         Console.WriteLine($"Passed: {_passed}");
         Console.WriteLine($"Failed: {_failed}");
@@ -773,6 +777,105 @@ internal static class Program
             Equal(theme.Surface.ToArgb(), bitmap.GetPixel(60, 30).ToArgb());
             Equal(theme.BorderStrong.ToArgb(), bitmap.GetPixel(0, 30).ToArgb());
         }
+    }
+
+    private static Bitmap PatternBitmap(int width, int height)
+    {
+        var bitmap = new Bitmap(width, height);
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+                bitmap.SetPixel(x, y, Color.FromArgb(255, (x * 7 + y) % 256, (y * 5 + x * 3) % 256, (x ^ y) % 256));
+        return bitmap;
+    }
+
+    private static Bitmap RenderOverlay(OverlayForm form, Size size)
+    {
+        var rendered = new Bitmap(size.Width, size.Height);
+        using var g = Graphics.FromImage(rendered);
+        form.PaintOverlay(g, new Rectangle(Point.Empty, size));
+        return rendered;
+    }
+
+    private static void OcrInputHasNoOverlayPixels()
+    {
+        foreach (string theme in new[] { "Dark", "Light" })
+        {
+            using var source = PatternBitmap(400, 300);
+            Bitmap? ocrInput = null;
+            using var form = new OverlayForm(new Settings { Theme = theme }, source, bitmap =>
+            {
+                ocrInput = (Bitmap)bitmap.Clone();
+                return Task.FromResult(CaptureOutcome.NoText);
+            });
+            form.HintArea = new Rectangle(0, 0, 400, 300);
+            Mouse(form, "OnMouseDown", MouseButtons.Left, 20, 10);
+            Mouse(form, "OnMouseMove", MouseButtons.Left, 380, 200);
+
+            // The overlay really draws the hint pill, outline and badge inside the selected area ...
+            var hint = form.HintBounds();
+            True(new Rectangle(20, 10, 360, 190).Contains(hint));
+            using (var rendered = RenderOverlay(form, source.Size))
+            {
+                var probe = new Point(hint.Left + 6, hint.Top + hint.Height / 2);
+                True(rendered.GetPixel(probe.X, probe.Y).ToArgb() != source.GetPixel(probe.X, probe.Y).ToArgb());
+                True(rendered.GetPixel(20, 100).ToArgb() != source.GetPixel(20, 100).ToArgb());
+            }
+
+            // ... but the bitmap handed to OCR is exactly the screenshot crop.
+            Mouse(form, "OnMouseUpAsync", MouseButtons.Left, 380, 200);
+            using var crop = ocrInput ?? throw new InvalidOperationException("OCR was not called.");
+            Equal(new Size(360, 190), crop.Size);
+            for (int y = 0; y < crop.Height; y++)
+                for (int x = 0; x < crop.Width; x++)
+                    if (crop.GetPixel(x, y).ToArgb() != source.GetPixel(x + 20, y + 10).ToArgb())
+                        throw new InvalidOperationException($"{theme}: OCR pixel ({x},{y}) differs from the screenshot.");
+        }
+    }
+
+    private static void OverlayOutlineUsesThemeAccent()
+    {
+        foreach (var (pref, theme) in new[] { ("Dark", Theme.Dark), ("Light", Theme.Light) })
+        {
+            using var source = new Bitmap(300, 200);
+            using var form = new OverlayForm(new Settings { Theme = pref }, source, _ => Task.FromResult(CaptureOutcome.NoText));
+            form.HintArea = new Rectangle(0, 0, 300, 200);
+            form.PreviewSelection(new Rectangle(40, 80, 120, 50));
+            using var rendered = RenderOverlay(form, source.Size);
+            Equal(theme.Accent.ToArgb(), rendered.GetPixel(100, 80).ToArgb());
+            var badge = form.BadgeBounds(new Rectangle(40, 80, 120, 50));
+            Equal(theme.Accent.ToArgb(), rendered.GetPixel(badge.Left + 2, badge.Top + badge.Height / 2).ToArgb());
+            Equal("120 \u00d7 50", OverlayForm.SizeText(new Rectangle(40, 80, 120, 50)));
+        }
+    }
+
+    private static void OverlayBadgePlacement()
+    {
+        using var source = new Bitmap(300, 200);
+        using var form = new OverlayForm(new Settings(), source, _ => Task.FromResult(CaptureOutcome.NoText));
+        var client = new Rectangle(0, 0, 300, 200);
+        var below = form.BadgeBounds(new Rectangle(40, 40, 100, 50));
+        True(below.Top > 90 && client.Contains(below));
+        var above = form.BadgeBounds(new Rectangle(40, 120, 100, 80));
+        True(above.Bottom < 120 && client.Contains(above));
+        var inside = form.BadgeBounds(new Rectangle(250, 0, 50, 200));
+        True(client.Contains(inside));
+        Equal(Rectangle.Empty, form.BadgeBounds(Rectangle.Empty));
+    }
+
+    private static void OverlayHintPlacement()
+    {
+        foreach (string language in new[] { "en", "tr" })
+        {
+            Strings.Use(language);
+            using var source = new Bitmap(1200, 400);
+            using var form = new OverlayForm(new Settings(), source, _ => Task.FromResult(CaptureOutcome.NoText));
+            form.HintArea = new Rectangle(600, 0, 600, 400);   // the right-hand monitor
+            var hint = form.HintBounds();
+            True(form.HintArea.Contains(hint));
+            True(Math.Abs((hint.Left + hint.Width / 2) - 900) <= 1);
+            True(hint.Top < 60);
+        }
+        Strings.Use("en");
     }
 
     private static void Run(string name, Action test)
