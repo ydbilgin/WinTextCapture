@@ -12,12 +12,10 @@ internal static class Screenshot
 {
     public static void CaptureSettings(string path, string? themeOverride = null, string lang = "en")
     {
-        var s = Settings.Load();
-        s.Language = string.IsNullOrEmpty(lang) ? "en" : lang;
-        if (!string.IsNullOrEmpty(themeOverride)) s.Theme = themeOverride;   // "Light" | "Dark"
+        var s = PublicSettings(themeOverride, lang);
         Strings.Use(s.Language);
 
-        using var form = new SettingsForm(s, s.AutoStart);
+        using var form = new SettingsForm(s, autoStartEnabled: false);
         form.StartPosition = FormStartPosition.Manual;
         form.Location = new Point(6000, 2000);   // beyond all monitors -> never visible
         form.ShowInTaskbar = false;
@@ -42,6 +40,16 @@ internal static class Screenshot
 
         form.Close();
     }
+
+    /// <summary>
+    /// Default settings (Win + Shift + T, automatic OCR language) with only the requested theme and UI
+    /// language, so documentation pictures never show the local user's own preferences.
+    /// </summary>
+    internal static Settings PublicSettings(string? themeOverride, string? lang) => new()
+    {
+        Language = string.IsNullOrEmpty(lang) ? "en" : lang,
+        Theme = string.IsNullOrEmpty(themeOverride) ? "System" : themeOverride,   // "Light" | "Dark"
+    };
 
     private static void Realize(Control c)
     {

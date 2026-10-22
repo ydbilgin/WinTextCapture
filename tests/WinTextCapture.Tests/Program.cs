@@ -62,6 +62,12 @@ internal static class Program
         Run("Turkish and RTL clipboard text stays exact", UnicodeClipboardRoundTrip);
         Run("selection supports reverse drags and ignores stray releases", ReverseAndStraySelection);
         Run("disposing pending OCR cannot report a late copy", DisposedCaptureCannotReportCopy);
+        Run("English and Turkish string tables have the same keys", StringTablesHaveSameKeys);
+        Run("settings controls sit on the 8 px grid with themed controls only", SettingsUsesGridAndThemedControls);
+        Run("settings labels fit their English and Turkish text", SettingsLabelsFitText);
+        Run("settings buttons take their colours from the theme", SettingsButtonsFollowTheme);
+        Run("hotkey field shows key chips and updates from key presses", HotkeyFieldShowsChips);
+        Run("hotkey field keeps Tab, Enter, Esc and Alt as dialog keys", HotkeyFieldKeyRouting);
 
         Console.WriteLine($"Passed: {_passed}");
         Console.WriteLine($"Failed: {_failed}");
@@ -603,6 +609,114 @@ internal static class Program
         completion.SetResult(CaptureOutcome.Copied("late result"));
         Application.DoEvents();
         Equal(CaptureStatus.Cancelled, form.Result.Status);
+    }
+
+    private static void StringTablesHaveSameKeys()
+    {
+        Equal(0, Strings.MissingKeys().Count);
+        foreach (string language in new[] { "en", "tr" })
+        {
+            Strings.Use(language);
+            foreach (var property in typeof(Strings).GetProperties(BindingFlags.Public | BindingFlags.Static))
+            {
+                string value = (string)property.GetValue(null)!;
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new InvalidOperationException($"{language}: {property.Name} has no text.");
+            }
+        }
+        Strings.Use("en");
+    }
+
+    private static IEnumerable<Control> AllControls(Control root)
+    {
+        foreach (Control child in root.Controls)
+        {
+            yield return child;
+            foreach (var nested in AllControls(child)) yield return nested;
+        }
+    }
+
+    private static void SettingsUsesGridAndThemedControls()
+    {
+        Strings.Use("en");
+        using var form = new SettingsForm(new Settings { Theme = "Dark" }, autoStartEnabled: false);
+        Equal(0, form.ClientSize.Width % 8);
+        Equal(0, form.ClientSize.Height % 8);
+        foreach (Control control in form.Controls)
+        {
+            if (control.Left % 8 != 0 || control.Top % 8 != 0)
+                throw new InvalidOperationException($"{control.GetType().Name} '{control.Text}' is off the 8 px grid at {control.Location}.");
+            if (control is TextBox || (control is Button && control is not ThemedButton)
+                || (control is ComboBox && control is not ThemedComboBox) || (control is CheckBox && control is not ThemedCheckBox))
+                throw new InvalidOperationException($"Unthemed {control.GetType().Name} '{control.Text}'.");
+        }
+        Equal(1, form.Controls.OfType<HotkeyField>().Count());
+        Equal(3, form.Controls.OfType<ThemedComboBox>().Count());
+        Equal(1, form.Controls.OfType<ThemedCheckBox>().Count());
+    }
+
+    private static void SettingsLabelsFitText()
+    {
+        foreach (string language in new[] { "en", "tr" })
+        {
+            Strings.Use(language);
+            using var form = new SettingsForm(new Settings(), autoStartEnabled: false);
+            foreach (var label in form.Controls.OfType<Label>())
+            {
+                var needed = TextRenderer.MeasureText(label.Text, label.Font, new Size(label.Width, 0), TextFormatFlags.WordBreak);
+                if (needed.Height > label.Height || (label.Height <= 32 && needed.Width > label.Width))
+                    throw new InvalidOperationException($"{language}: '{label.Text}' needs {needed}, has {label.Size}.");
+            }
+            var check = form.Controls.OfType<ThemedCheckBox>().Single();
+            True(TextRenderer.MeasureText(check.Text, check.Font).Width + 32 <= check.Width);
+        }
+        Strings.Use("en");
+    }
+
+    private static void SettingsButtonsFollowTheme()
+    {
+        Strings.Use("en");
+        foreach (var (pref, theme) in new[] { ("Dark", Theme.Dark), ("Light", Theme.Light) })
+        {
+            using var form = new SettingsForm(new Settings { Theme = pref }, autoStartEnabled: false);
+            var buttons = form.Controls.OfType<ThemedButton>().ToList();
+            Equal(theme.Accent, buttons.Single(b => b.Text == Strings.Save).FillColor);
+            Equal(theme.Surface2, buttons.Single(b => b.Text == Strings.Cancel).FillColor);
+            Equal(theme.Back, form.BackColor);
+        }
+    }
+
+    private static void HotkeyFieldShowsChips()
+    {
+        Strings.Use("en");
+        using var form = new SettingsForm(new Settings(), autoStartEnabled: false);
+        var field = form.Controls.OfType<HotkeyField>().Single();
+        Equal("Shift|Win|T", string.Join("|", field.Parts));
+        Equal("Shift + Win + T", field.Text);
+
+        var keyDown = typeof(SettingsForm).GetMethod("HotkeyBox_KeyDown", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        keyDown.Invoke(form, new object?[] { field, new KeyEventArgs(Keys.Y | Keys.Control) });
+        Equal("Ctrl|Y", string.Join("|", field.Parts));
+
+        var clear = form.Controls.OfType<ThemedButton>().Single(b => b.Text == Strings.Clear);
+        typeof(Button).GetMethod("OnClick", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(clear, new object[] { EventArgs.Empty });
+        Equal(0, field.Parts.Count);
+        Equal(Strings.HotkeyPressKeys, field.Text);
+    }
+
+    private static void HotkeyFieldKeyRouting()
+    {
+        using var field = new HotkeyField();
+        var isInputKey = typeof(HotkeyField).GetMethod("IsInputKey", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        bool Input(Keys keys) => (bool)isInputKey.Invoke(field, new object[] { keys })!;
+        True(!Input(Keys.Tab));
+        True(!Input(Keys.Tab | Keys.Shift));
+        True(!Input(Keys.Enter));
+        True(!Input(Keys.Escape));
+        True(!Input(Keys.T | Keys.Alt));
+        True(Input(Keys.T | Keys.Shift));
+        True(Input(Keys.Left));
+        True(Input(Keys.F5 | Keys.Control));
     }
 
     private static void Run(string name, Action test)
