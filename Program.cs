@@ -33,11 +33,19 @@ internal static class Program
 
         // Dev/CI helper: render the settings window off-screen to a PNG (for docs). Runs before the
         // single-instance check so it works while the tray app is already running.
-        if (args.Length >= 2 && args[0] == "--screenshot")
+        // Arguments: <mode> <png> [Light|Dark] [en|tr] [variant]. Every mode uses default settings
+        // and synthetic content, and keeps its window off the visible desktop.
+        if (args.Length >= 2 && args[0].StartsWith("--screenshot", StringComparison.Ordinal))
         {
             string? theme = args.Length >= 3 ? args[2] : null;
             string lang = args.Length >= 4 ? args[3] : "en";
-            Screenshot.CaptureSettings(args[1], theme, lang);
+            string? variant = args.Length >= 5 ? args[4] : null;
+            switch (args[0])
+            {
+                case "--screenshot": Screenshot.CaptureSettings(args[1], theme, lang); break;
+                case "--screenshot-tray": Screenshot.CaptureTrayMenu(args[1], theme, lang); break;
+                default: return 2;
+            }
             return 0;
         }
 

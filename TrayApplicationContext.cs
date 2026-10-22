@@ -6,10 +6,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly NotifyIcon _tray;
     private readonly BackgroundForm _background;
     private readonly KeyboardHook _hook;
-    private readonly ToolStripMenuItem _captureItem;
-    private readonly ToolStripMenuItem _settingsItem;
-    private readonly ToolStripMenuItem _aboutItem;
-    private readonly ToolStripMenuItem _exitItem;
+    private readonly TrayMenu _menu;
     private readonly Icon _icon;
     private ToastForm? _toast;
     private Settings _settings;
@@ -20,23 +17,15 @@ internal sealed class TrayApplicationContext : ApplicationContext
         Strings.Use(_settings.Language);
         _icon = AppIcon.Create();
 
-        _captureItem = new ToolStripMenuItem("", null, (s, e) => CaptureNow());
-        _settingsItem = new ToolStripMenuItem("", null, (s, e) => OpenSettings());
-        _aboutItem = new ToolStripMenuItem("", null, (s, e) => ShowAbout());
-        _exitItem = new ToolStripMenuItem("", null, (s, e) => ExitApp());
-
-        var menu = new ContextMenuStrip();
-        menu.Items.Add(_captureItem);
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(_settingsItem);
-        menu.Items.Add(_aboutItem);
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(_exitItem);
+        _menu = new TrayMenu(CaptureNow, OpenSettings, ShowAbout, ExitApp);
+        // "Follow system" can change while the app runs, so the theme is resolved each time the menu opens.
+        _menu.Strip.Opening += (s, e) => _menu.ApplyTheme(Theming.Resolve(_settings.Theme));
+        _menu.ApplyTheme(Theming.Resolve(_settings.Theme));
 
         _tray = new NotifyIcon
         {
             Visible = true,
-            ContextMenuStrip = menu,
+            ContextMenuStrip = _menu.Strip,
             Icon = _icon,
         };
         _tray.DoubleClick += (s, e) => CaptureNow();
@@ -132,10 +121,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     {
         string combo = _settings.HotKeyText();
         _tray.Text = Strings.TrayText(combo);
-        _captureItem.Text = Strings.MenuCapture;
-        _settingsItem.Text = Strings.MenuSettings;
-        _aboutItem.Text = Strings.MenuAbout;
-        _exitItem.Text = Strings.MenuExit;
+        _menu.ApplyText(_settings);
     }
 
     private void ExitApp()
