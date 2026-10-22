@@ -61,6 +61,24 @@ internal static class AutoStartDecision
 
             storedPath = storedPath[1..closingQuote];
         }
+        else
+        {
+            // Legacy unquoted Run values can contain spaces in the path and trailing arguments.
+            // Only an executable suffix followed by whitespace/end separates the command from its path.
+            int search = 0;
+            while (search < storedPath.Length)
+            {
+                int suffix = storedPath.IndexOf(".exe", search, StringComparison.OrdinalIgnoreCase);
+                if (suffix < 0) break;
+                int end = suffix + 4;
+                if (end == storedPath.Length || char.IsWhiteSpace(storedPath[end]))
+                {
+                    storedPath = storedPath[..end];
+                    break;
+                }
+                search = end;
+            }
+        }
 
         try
         {

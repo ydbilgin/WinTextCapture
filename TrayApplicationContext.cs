@@ -72,8 +72,12 @@ internal sealed class TrayApplicationContext : ApplicationContext
         if (form.ShowDialog() != DialogResult.OK)
             return;
 
+        if (!form.Result.Save())
+        {
+            _tray.ShowBalloonTip(4000, App.Name, Strings.SettingsSaveFailed, ToolTipIcon.Warning);
+            return;
+        }
         _settings = form.Result;
-        _settings.Save();
         Strings.Use(_settings.Language);
         TryApplyAutoStart(() => AutoStart.ApplyUserChange(_settings.AutoStart));
         RebuildText();

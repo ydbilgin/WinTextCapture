@@ -56,6 +56,7 @@ public static class Strings
     public static string CaptureBusy => G("CaptureBusy");
     public static string AboutTitle => G("AboutTitle");
     public static string TipAutoStartFail => G("TipAutoStartFail");
+    public static string SettingsSaveFailed => G("SettingsSaveFailed");
 
     // ---- interpolated (keep {0} out of the table) ----
     public static string TrayText(string combo) => string.Format(G("TrayText"), combo);
@@ -65,6 +66,7 @@ public static class Strings
     private static readonly Dictionary<string, string> En = new()
     {
         ["SettingsTitle"] = "WinTextCapture — Settings",
+        ["SettingsSaveFailed"] = "Settings could not be saved. Your previous settings are still active.",
         ["HotkeyHead"] = "Capture hotkey",
         ["HotkeyHint"] = "Click the box, then press your key combo. It overrides Windows' own shortcut.",
         ["HotkeyPressKeys"] = "(press keys)",
@@ -104,6 +106,7 @@ public static class Strings
     private static readonly Dictionary<string, string> Tr = new()
     {
         ["SettingsTitle"] = "WinTextCapture — Ayarlar",
+        ["SettingsSaveFailed"] = "Ayarlar kaydedilemedi. Önceki ayarlarınız etkin kalmaya devam ediyor.",
         ["HotkeyHead"] = "Yakalama kısayolu",
         ["HotkeyHint"] = "Kutuya tıklayın, sonra tuş kombinasyonuna basın. Windows'un kendi kısayolunu ezer.",
         ["HotkeyPressKeys"] = "(tuşlara basın)",

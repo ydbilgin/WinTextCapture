@@ -12,14 +12,21 @@ internal sealed class OverlayForm : Form
     private Point _startPoint;
     private Rectangle _selection;
     private bool _dragging;
+    private bool _processing;
+    private bool _cancelled;
+    private readonly Func<Bitmap, Task<CaptureOutcome>> _extract;
 
     public CaptureOutcome Result { get; private set; } = CaptureOutcome.Cancelled;
 
-    public OverlayForm(Settings settings)
+    public OverlayForm(Settings settings) : this(settings, null, null) { }
+
+    internal OverlayForm(Settings settings, Bitmap? screenshot, Func<Bitmap, Task<CaptureOutcome>>? extract)
     {
         _settings = settings;
+        _extract = extract ?? ExtractTextAsync;
 
         FormBorderStyle = FormBorderStyle.None;
+        AutoScaleMode = AutoScaleMode.None; // screenshot and mouse coordinates are physical pixels
         Bounds = VirtualScreenBounds();
         TopMost = true;
         Cursor = Cursors.Cross;
@@ -29,11 +36,18 @@ internal sealed class OverlayForm : Form
         ShowInTaskbar = false;
         StartPosition = FormStartPosition.Manual;
 
-        _screenshot = new Bitmap(Bounds.Width, Bounds.Height);
-        using (var g = Graphics.FromImage(_screenshot))
-            g.CopyFromScreen(Bounds.Location, Point.Empty, Bounds.Size);
+        if (screenshot is null)
+        {
+            _screenshot = CaptureScreenshot(Bounds);
+        }
+        else
+        {
+            _screenshot = (Bitmap)screenshot.Clone();
+            Size = screenshot.Size;
+        }
 
-        _dimmedScreenshot = CreateDimmedScreenshot(_screenshot);
+        try { _dimmedScreenshot = CreateDimmedScreenshot(_screenshot); }
+        catch { _screenshot.Dispose(); throw; }
         MouseDown += OnMouseDown;
         MouseMove += OnMouseMove;
         MouseUp += OnMouseUpAsync;
@@ -41,6 +55,7 @@ internal sealed class OverlayForm : Form
         {
             if (e.KeyCode == Keys.Escape)
             {
+                _cancelled = true;
                 Result = CaptureOutcome.Cancelled;
                 Close();
             }
@@ -54,6 +69,13 @@ internal sealed class OverlayForm : Form
         Native.SetForegroundWindow(Handle);
     }
 
+    protected override void OnDpiChanged(DpiChangedEventArgs e)
+    {
+        // A screen-spanning screenshot cannot follow one monitor's suggested logical-size rectangle.
+        e.Cancel = true;
+        base.OnDpiChanged(e);
+    }
+
     private static Rectangle VirtualScreenBounds()
     {
         int x = Native.GetSystemMetrics(Native.SM_XVIRTUALSCREEN);
@@ -65,6 +87,7 @@ internal sealed class OverlayForm : Form
 
     private void OnMouseDown(object? sender, MouseEventArgs e)
     {
+        if (e.Button != MouseButtons.Left || _processing) return;
         _startPoint = e.Location;
         _selection = Rectangle.Empty;
         _dragging = true;
@@ -75,11 +98,11 @@ internal sealed class OverlayForm : Form
         if (!_dragging) return;
 
         var previous = _selection;
-        var next = new Rectangle(
+        var next = Rectangle.Intersect(new Rectangle(Point.Empty, _screenshot.Size), new Rectangle(
             Math.Min(_startPoint.X, e.X),
             Math.Min(_startPoint.Y, e.Y),
             Math.Abs(_startPoint.X - e.X),
-            Math.Abs(_startPoint.Y - e.Y));
+            Math.Abs(_startPoint.Y - e.Y)));
         if (next == previous) return;
 
         _selection = next;
@@ -88,8 +111,13 @@ internal sealed class OverlayForm : Form
 
     private async void OnMouseUpAsync(object? sender, MouseEventArgs e)
     {
+        if (e.Button != MouseButtons.Left || !_dragging || _processing) return;
+        OnMouseMove(sender, e); // the release can be newer than the last coalesced WM_MOUSEMOVE
         _dragging = false;
-        Hide();
+        _processing = true;
+        // Hiding a modal form ends ShowDialog immediately and disposes this form while OCR is pending.
+        // A transparent visible form keeps ownership until the asynchronous operation completes.
+        Opacity = 0;
 
         if (_selection.Width <= 10 || _selection.Height <= 10)
         {
@@ -104,10 +132,14 @@ internal sealed class OverlayForm : Form
             using (var g = Graphics.FromImage(cropped))
                 g.DrawImage(_screenshot, new Rectangle(0, 0, cropped.Width, cropped.Height), _selection, GraphicsUnit.Pixel);
 
-            Result = await ExtractTextAsync(cropped);
+            var outcome = await _extract(cropped);
+            if (_cancelled || IsDisposed) return;
+            Result = outcome;
         }
-        catch
+        catch (Exception ex)
         {
+            CrashLogger.Write(ex, fatal: false);
+            if (_cancelled || IsDisposed) return;
             Result = CaptureOutcome.Error;
         }
 
@@ -161,6 +193,7 @@ internal sealed class OverlayForm : Form
             if (engine == null) return CaptureOutcome.Error;
 
             var result = await engine.RecognizeAsync(softwareBitmap);
+            if (_cancelled || IsDisposed) return CaptureOutcome.Cancelled;
             if (string.IsNullOrWhiteSpace(result.Text))
                 return CaptureOutcome.NoText;
 
@@ -197,9 +230,22 @@ internal sealed class OverlayForm : Form
     {
         if (disposing)
         {
+            _cancelled = true;
             _screenshot.Dispose();
             _dimmedScreenshot.Dispose();
         }
         base.Dispose(disposing);
+    }
+
+    private static Bitmap CaptureScreenshot(Rectangle bounds)
+    {
+        var bitmap = new Bitmap(bounds.Width, bounds.Height);
+        try
+        {
+            using var graphics = Graphics.FromImage(bitmap);
+            graphics.CopyFromScreen(bounds.Location, Point.Empty, bounds.Size);
+            return bitmap;
+        }
+        catch { bitmap.Dispose(); throw; }
     }
 }
