@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.Reflection;
+using System.Threading.Tasks;
 using WinTextCapture;
 
 internal static class Program
@@ -15,6 +17,7 @@ internal static class Program
     [STAThread]
     private static int Main()
     {
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
         Run("default hotkey triggers once, consumes repeats and key-up, then resets", HotkeyTriggersOnceAndResets);
         Run("wrong modifiers pass through", WrongModifiersPass);
         Run("invalid binding passes through", InvalidBindingPasses);
@@ -49,6 +52,16 @@ internal static class Program
         Run("trigger keys without a named Keys value stay valid and survive load", UnnamedVirtualKeyStaysValid);
         Run("settings preserve valid preferences and recover broken JSON", SettingsValidAndBrokenJson);
         Run("settings action buttons do not overlap appearance controls", SettingsButtonsDoNotOverlapAppearance);
+        Run("capture stays modal until asynchronous OCR finishes", CaptureStaysModalUntilOcrCompletes);
+        Run("selection uses final release coordinates", SelectionUsesReleaseCoordinates);
+        Run("right-button release does not finish a left drag", RightReleaseDoesNotFinishSelection);
+        Run("selection is clipped to captured pixels", SelectionIsClipped);
+        Run("unquoted startup commands with arguments preserve their executable", StartupCommandArguments);
+        Run("failed partial settings writes preserve the previous file", SettingsWritesAreAtomic);
+        Run("DPI changes keep screenshot and selection pixels aligned", CaptureDpiKeepsPhysicalBounds);
+        Run("Turkish and RTL clipboard text stays exact", UnicodeClipboardRoundTrip);
+        Run("selection supports reverse drags and ignores stray releases", ReverseAndStraySelection);
+        Run("disposing pending OCR cannot report a late copy", DisposedCaptureCannotReportCopy);
 
         Console.WriteLine($"Passed: {_passed}");
         Console.WriteLine($"Failed: {_failed}");
@@ -428,6 +441,170 @@ internal static class Program
         Strings.Use("en");
     }
 
+    private static void Mouse(OverlayForm form, string method, MouseButtons button, int x, int y) =>
+        typeof(OverlayForm).GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)!
+            .Invoke(form, new object?[] { null, new MouseEventArgs(button, 1, x, y, 0) });
+
+    private static void CaptureStaysModalUntilOcrCompletes()
+    {
+        using var image = new Bitmap(160, 100);
+        var completion = new TaskCompletionSource<CaptureOutcome>();
+        using var form = new OverlayForm(new Settings(), image, _ => completion.Task);
+        using var timer = new System.Windows.Forms.Timer { Interval = 80 };
+        timer.Tick += (_, _) => { timer.Stop(); completion.TrySetResult(CaptureOutcome.NoText); };
+        form.Shown += (_, _) => form.BeginInvoke((Action)(() =>
+        {
+            Mouse(form, "OnMouseDown", MouseButtons.Left, 10, 10);
+            Mouse(form, "OnMouseMove", MouseButtons.Left, 90, 60);
+            Mouse(form, "OnMouseUpAsync", MouseButtons.Left, 90, 60);
+            timer.Start();
+        }));
+        var result = form.ShowDialog();
+        bool waited = completion.Task.IsCompleted;
+        completion.TrySetResult(CaptureOutcome.NoText);
+        Application.DoEvents();
+        True(waited);
+        Equal(DialogResult.OK, result);
+        Equal(CaptureStatus.NoText, form.Result.Status);
+    }
+
+    private static void SelectionUsesReleaseCoordinates()
+    {
+        using var image = new Bitmap(160, 100);
+        Size? cropped = null;
+        using var form = new OverlayForm(new Settings(), image, bitmap =>
+        {
+            cropped = bitmap.Size;
+            return Task.FromResult(CaptureOutcome.NoText);
+        });
+        Mouse(form, "OnMouseDown", MouseButtons.Left, 10, 10);
+        Mouse(form, "OnMouseMove", MouseButtons.Left, 40, 40);
+        Mouse(form, "OnMouseUpAsync", MouseButtons.Left, 90, 60);
+        Equal(new Size(80, 50), cropped);
+    }
+
+    private static void RightReleaseDoesNotFinishSelection()
+    {
+        using var image = new Bitmap(160, 100);
+        int extracts = 0;
+        using var form = new OverlayForm(new Settings(), image, _ =>
+        {
+            extracts++;
+            return Task.FromResult(CaptureOutcome.NoText);
+        });
+        Mouse(form, "OnMouseDown", MouseButtons.Left, 10, 10);
+        Mouse(form, "OnMouseMove", MouseButtons.Left, 80, 60);
+        Mouse(form, "OnMouseUpAsync", MouseButtons.Right, 80, 60);
+        Equal(0, extracts);
+    }
+
+    private static void SelectionIsClipped()
+    {
+        using var image = new Bitmap(160, 100);
+        Size? cropped = null;
+        using var form = new OverlayForm(new Settings(), image, bitmap =>
+        {
+            cropped = bitmap.Size;
+            return Task.FromResult(CaptureOutcome.NoText);
+        });
+        Mouse(form, "OnMouseDown", MouseButtons.Left, 10, 10);
+        Mouse(form, "OnMouseMove", MouseButtons.Left, 190, 130);
+        Mouse(form, "OnMouseUpAsync", MouseButtons.Left, 190, 130);
+        Equal(new Size(150, 90), cropped);
+    }
+
+    private static void StartupCommandArguments()
+    {
+        Equal(@"D:\Other install\WinTextCapture.exe", AutoStartDecision.TargetPath(@"D:\Other install\WinTextCapture.exe --quiet"));
+        Equal(AutoStartAction.LeaveAsIs, AutoStartDecision.EvaluateStartup(@"D:\Other install\WinTextCapture.exe --quiet",
+            @"C:\Current\WinTextCapture.exe", storedTargetExists: true));
+    }
+
+    private static void SettingsWritesAreAtomic()
+    {
+        string folder = Path.Combine(AppContext.BaseDirectory, "settings-audit-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        string path = Path.Combine(folder, "settings.json");
+        const string original = "{\"Theme\":\"Dark\"}";
+        try
+        {
+            File.WriteAllText(path, original);
+            var settings = new Settings { Theme = "Light" };
+            True(!settings.Save(path, (target, _) =>
+            {
+                File.WriteAllText(target, "{");
+                throw new IOException("Simulated partial disk write");
+            }));
+            Equal(original, File.ReadAllText(path));
+            True(settings.Save(path));
+            Equal("Light", Settings.Load(path).Theme);
+            Equal(1, Directory.GetFiles(folder).Length);
+        }
+        finally { File.Delete(path); Directory.Delete(folder); }
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
+
+    private static void CaptureDpiKeepsPhysicalBounds()
+    {
+        using var image = new Bitmap(160, 100);
+        using var form = new OverlayForm(new Settings(), image, _ => Task.FromResult(CaptureOutcome.NoText));
+        _ = form.Handle;
+        var expected = form.Bounds;
+        IntPtr suggested = Marshal.AllocHGlobal(16);
+        try
+        {
+            Marshal.WriteInt32(suggested, 0, expected.Left);
+            Marshal.WriteInt32(suggested, 4, expected.Top);
+            Marshal.WriteInt32(suggested, 8, expected.Left + expected.Width * 2);
+            Marshal.WriteInt32(suggested, 12, expected.Top + expected.Height * 2);
+            SendMessage(form.Handle, 0x02E0, (IntPtr)((144 << 16) | 144), suggested);
+            Equal(expected, form.Bounds);
+        }
+        finally { Marshal.FreeHGlobal(suggested); }
+    }
+
+    private static void UnicodeClipboardRoundTrip()
+    {
+        foreach (string text in new[] { "İı Şş Ğğ Çç Öö Üü\r\nTürkçe", "\u200Fمرحبا بالعالم\nשלום עולם" })
+        {
+            string? clipboard = null;
+            True(ClipboardWriter.SetTextWithRetry(text, value => clipboard = value, () => clipboard!, _ => { }));
+            Equal(text, clipboard);
+            True(CaptureMessageFormatter.Format(CaptureOutcome.Copied(text)).Contains(text.Split('\n')[0].TrimEnd('\r'), StringComparison.Ordinal));
+        }
+    }
+
+    private static void ReverseAndStraySelection()
+    {
+        using var image = new Bitmap(160, 100);
+        Size? cropped = null;
+        using var form = new OverlayForm(new Settings(), image, bitmap =>
+        {
+            cropped = bitmap.Size;
+            return Task.FromResult(CaptureOutcome.NoText);
+        });
+        Mouse(form, "OnMouseUpAsync", MouseButtons.Left, 90, 60);
+        Equal<Size?>(null, cropped);
+        Mouse(form, "OnMouseDown", MouseButtons.Left, 90, 60);
+        Mouse(form, "OnMouseUpAsync", MouseButtons.Left, 10, 10);
+        Equal(new Size(80, 50), cropped);
+    }
+
+    private static void DisposedCaptureCannotReportCopy()
+    {
+        using var image = new Bitmap(160, 100);
+        var completion = new TaskCompletionSource<CaptureOutcome>();
+        using var form = new OverlayForm(new Settings(), image, _ => completion.Task);
+        Mouse(form, "OnMouseDown", MouseButtons.Left, 10, 10);
+        Mouse(form, "OnMouseUpAsync", MouseButtons.Left, 90, 60);
+        form.Dispose();
+        completion.SetResult(CaptureOutcome.Copied("late result"));
+        Application.DoEvents();
+        Equal(CaptureStatus.Cancelled, form.Result.Status);
+    }
+
     private static void Run(string name, Action test)
     {
         try
@@ -439,7 +616,7 @@ internal static class Program
         catch (Exception ex)
         {
             Console.Error.WriteLine($"FAIL {name}");
-            Console.Error.WriteLine(ex.Message);
+            Console.Error.WriteLine(ex);
             _failed++;
         }
     }

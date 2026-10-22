@@ -66,14 +66,21 @@ public sealed class Settings
         }
     }
 
-    public void Save()
+    public bool Save() => Save(FilePath);
+
+    internal bool Save(string path, Action<string, string>? write = null)
     {
+        string temporary = Path.GetFullPath(path) + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
-            Directory.CreateDirectory(Dir);
-            File.WriteAllText(FilePath, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
+            (write ?? File.WriteAllText)(temporary, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+            using (var file = new FileStream(temporary, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) file.Flush(true);
+            File.Move(temporary, path, overwrite: true);
+            return true;
         }
-        catch { /* non-fatal */ }
+        catch { return false; }
+        finally { try { File.Delete(temporary); } catch { } }
     }
 
     public bool AnyModifier => ModCtrl || ModAlt || ModShift || ModWin;

@@ -33,7 +33,7 @@ Press the hotkey, drag over text, release the mouse button, and the recognized t
 - 🖥️ **Multi-monitor selection overlay** — grab text on any screen; mixed-DPI aware.
 - 🌍 **OCR language picker** — choose from the OCR languages installed in Windows, ideal for non-English text.
 - 🔬 **Image preprocessing** — upscales tiny selections and bounds oversized captures to the Windows OCR image limit.
-- 📋 **Reliable clipboard** — every write is retried and verified, so you never paste stale text.
+- 📋 **Checked clipboard writes** — writes are retried and checked before success feedback.
 - 🔔 **Toast feedback** — a short preview of what was copied, or a clear note when nothing readable was found.
 - 🚀 **Quiet & light** — optional start with Windows, single instance, tray-only, and light / dark / system themes.
 
@@ -87,13 +87,15 @@ Settings are stored in `%APPDATA%\WinTextCapture\settings.json`. Missing or unre
 
 The Windows startup registry entry controls whether the app starts with Windows. Startup repairs an entry whose executable is missing. It preserves an entry pointing to another existing copy. Saving an explicit startup choice applies it to the current copy.
 
-Handled UI exceptions, startup-setting failures, and fatal exceptions are recorded in `%APPDATA%\WinTextCapture\error.log`. Capture failures currently show a generic error and may lack an exception entry.
+Handled UI exceptions, capture exceptions, startup-setting failures, and fatal exceptions are recorded in `%APPDATA%\WinTextCapture\error.log`. Capture failures show a generic error while retaining exception diagnostics locally.
+
+Settings saves replace the file atomically. A failed save preserves the previous settings and hotkey. Capture stays busy until asynchronous OCR completes; left-button selection uses the release position, clips to captured pixels, and keeps physical bounds when Windows reports a DPI change.
 
 ## Testing
 
 The dependency-free executable test harness covers hotkey state, Unicode previews, clipboard retry decisions, OCR sizing, settings recovery, settings layout, startup decisions, and diagnostic formatting.
 
-Tests keep settings forms invisible and use clipboard delegates and settings fixtures inside the test output directory. They do not launch the tray app or change the Windows startup registry.
+Tests use clipboard delegates, synthetic capture bitmaps, and settings fixtures inside the test output directory. Modal capture and native DPI-message checks show only test windows, so run the suite on a hidden desktop. Tests do not launch the tray app or change the Windows startup registry.
 
 ```powershell
 dotnet build tests\WinTextCapture.Tests\WinTextCapture.Tests.csproj -c Release --disable-build-servers -m:1 -warnaserror -p:UseSharedCompilation=false
