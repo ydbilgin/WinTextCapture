@@ -1,3 +1,4 @@
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using Windows.Graphics.Imaging;
 using Windows.Media.Ocr;
@@ -15,6 +16,13 @@ internal sealed class OverlayForm : Form
     private bool _processing;
     private bool _cancelled;
     private readonly Func<Bitmap, Task<CaptureOutcome>> _extract;
+    private readonly Theme _theme;
+    private readonly Font _hintFont;
+    private readonly Font _badgeFont;
+
+    /// <summary>Client-area rectangle of the monitor under the cursor; the hint pill sits at its top.</summary>
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+    internal Rectangle HintArea { get; set; }
 
     public CaptureOutcome Result { get; private set; } = CaptureOutcome.Cancelled;
 
@@ -24,6 +32,7 @@ internal sealed class OverlayForm : Form
     {
         _settings = settings;
         _extract = extract ?? ExtractTextAsync;
+        _theme = Theming.Resolve(settings.Theme);
 
         FormBorderStyle = FormBorderStyle.None;
         AutoScaleMode = AutoScaleMode.None; // screenshot and mouse coordinates are physical pixels
@@ -48,6 +57,12 @@ internal sealed class OverlayForm : Form
 
         try { _dimmedScreenshot = CreateDimmedScreenshot(_screenshot); }
         catch { _screenshot.Dispose(); throw; }
+
+        // Overlay coordinates are physical pixels, so text sizes follow the window's DPI by hand.
+        float scale = DeviceDpi / 96f;
+        _hintFont = new Font("Segoe UI", 14f * scale, GraphicsUnit.Pixel);
+        _badgeFont = new Font("Segoe UI Semibold", 12f * scale, GraphicsUnit.Pixel);
+        HintArea = MonitorUnderCursor();
         MouseDown += OnMouseDown;
         MouseMove += OnMouseMove;
         MouseUp += OnMouseUpAsync;
@@ -85,6 +100,15 @@ internal sealed class OverlayForm : Form
         return new Rectangle(x, y, w, h);
     }
 
+    private Rectangle MonitorUnderCursor()
+    {
+        var client = new Rectangle(Point.Empty, _screenshot.Size);
+        var monitor = Screen.FromPoint(Cursor.Position).Bounds;
+        monitor.Offset(-Bounds.Left, -Bounds.Top);
+        var area = Rectangle.Intersect(client, monitor);
+        return area.Width > 0 && area.Height > 0 ? area : client;
+    }
+
     private void OnMouseDown(object? sender, MouseEventArgs e)
     {
         if (e.Button != MouseButtons.Left || _processing) return;
@@ -107,6 +131,8 @@ internal sealed class OverlayForm : Form
 
         _selection = next;
         Invalidate(DamageRect(previous, _selection));
+        if (!previous.IsEmpty) Invalidate(Inflated(BadgeBounds(previous), 2));
+        if (!_selection.IsEmpty) Invalidate(Inflated(BadgeBounds(_selection), 2));
     }
 
     private async void OnMouseUpAsync(object? sender, MouseEventArgs e)
@@ -150,15 +176,86 @@ internal sealed class OverlayForm : Form
     protected override void OnPaint(PaintEventArgs e)
     {
         base.OnPaint(e);
-        var clip = e.ClipRectangle;
-        e.Graphics.DrawImage(_dimmedScreenshot, clip, clip, GraphicsUnit.Pixel);
-
-        if (_selection.Width <= 0 || _selection.Height <= 0) return;
-
-        e.Graphics.DrawImage(_screenshot, _selection, _selection, GraphicsUnit.Pixel);
-        using var pen = new Pen(Color.FromArgb(80, 220, 255), 2f);
-        e.Graphics.DrawRectangle(pen, _selection);
+        PaintOverlay(e.Graphics, e.ClipRectangle);
     }
+
+    /// <summary>
+    /// Draws the overlay surface only: the dimmed screenshot, the clear selection with its accent outline
+    /// and size badge, and the hint pill. The screenshot bitmaps are read, never drawn on.
+    /// </summary>
+    internal void PaintOverlay(Graphics g, Rectangle clip)
+    {
+        g.DrawImage(_dimmedScreenshot, clip, clip, GraphicsUnit.Pixel);
+
+        if (_selection.Width > 0 && _selection.Height > 0)
+        {
+            g.DrawImage(_screenshot, _selection, _selection, GraphicsUnit.Pixel);
+            using var pen = new Pen(_theme.Accent, 2f);
+            g.DrawRectangle(pen, _selection);
+            DrawBadge(g, _selection);
+        }
+
+        DrawHint(g);
+    }
+
+    /// <summary>Test and documentation hook: the selection a drag would have made.</summary>
+    internal void PreviewSelection(Rectangle selection) =>
+        _selection = Rectangle.Intersect(new Rectangle(Point.Empty, _screenshot.Size), selection);
+
+    internal static string SizeText(Rectangle selection) => $"{selection.Width} × {selection.Height}";
+
+    internal Rectangle HintBounds()
+    {
+        var text = TextRenderer.MeasureText(Strings.OverlayHint, _hintFont, Size.Empty, TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix);
+        int padX = (int)Math.Round(16 * DeviceDpi / 96f), padY = (int)Math.Round(8 * DeviceDpi / 96f);
+        int top = (int)Math.Round(24 * DeviceDpi / 96f);
+        var size = new Size(text.Width + padX * 2, text.Height + padY * 2);
+        return new Rectangle(HintArea.Left + (HintArea.Width - size.Width) / 2, HintArea.Top + top, size.Width, size.Height);
+    }
+
+    internal Rectangle BadgeBounds(Rectangle selection)
+    {
+        if (selection.Width <= 0 || selection.Height <= 0) return Rectangle.Empty;
+        var text = TextRenderer.MeasureText(SizeText(selection), _badgeFont, Size.Empty, TextFormatFlags.NoPadding);
+        int pad = (int)Math.Round(6 * DeviceDpi / 96f), gap = (int)Math.Round(6 * DeviceDpi / 96f);
+        var size = new Size(text.Width + pad * 2, text.Height + pad);
+        var client = new Rectangle(Point.Empty, _screenshot.Size);
+        int y = selection.Bottom + gap;
+        if (y + size.Height > client.Bottom) y = selection.Top - gap - size.Height;   // no room below: above
+        if (y < client.Top) y = selection.Bottom - gap - size.Height;                 // no room above: inside
+        int x = Math.Clamp(selection.Left, client.Left, Math.Max(client.Left, client.Right - size.Width));
+        return new Rectangle(x, y, size.Width, size.Height);
+    }
+
+    private void DrawBadge(Graphics g, Rectangle selection)
+    {
+        var bounds = BadgeBounds(selection);
+        var smoothing = g.SmoothingMode;
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        using (var path = Theming.Rounded(bounds, Math.Max(3, bounds.Height / 4)))
+        using (var fill = new SolidBrush(_theme.Accent))
+            g.FillPath(fill, path);
+        g.SmoothingMode = smoothing;
+        TextRenderer.DrawText(g, SizeText(selection), _badgeFont, bounds, _theme.AccentText,
+            TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+    }
+
+    private void DrawHint(Graphics g)
+    {
+        var bounds = HintBounds();
+        var smoothing = g.SmoothingMode;
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        using (var path = Theming.Rounded(bounds, bounds.Height / 2))
+        {
+            using (var fill = new SolidBrush(Color.FromArgb(240, _theme.Surface))) g.FillPath(fill, path);
+            using (var pen = new Pen(_theme.BorderStrong)) g.DrawPath(pen, path);
+        }
+        g.SmoothingMode = smoothing;
+        TextRenderer.DrawText(g, Strings.OverlayHint, _hintFont, bounds, _theme.Text,
+            TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix);
+    }
+
+    private static Rectangle Inflated(Rectangle r, int by) { r.Inflate(by, by); return r; }
 
     private static Bitmap CreateDimmedScreenshot(Bitmap source)
     {
@@ -233,6 +330,8 @@ internal sealed class OverlayForm : Form
             _cancelled = true;
             _screenshot.Dispose();
             _dimmedScreenshot.Dispose();
+            _hintFont.Dispose();
+            _badgeFont.Dispose();
         }
         base.Dispose(disposing);
     }

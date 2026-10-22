@@ -45,6 +45,7 @@ public static class Strings
     public static string ValidationPickKey => G("ValidationPickKey");
 
     // ---- tray / notifications ----
+    public static string OverlayHint => G("OverlayHint");
     public static string MenuCapture => G("MenuCapture");
     public static string MenuSettings => G("MenuSettings");
     public static string MenuAbout => G("MenuAbout");
@@ -88,6 +89,7 @@ public static class Strings
         ["Save"] = "Save",
         ["Cancel"] = "Cancel",
         ["ValidationPickKey"] = "Please pick a key and at least one modifier (Ctrl / Alt / Shift / Win).",
+        ["OverlayHint"] = "Drag over text · Esc to cancel",
         ["MenuCapture"] = "Capture now",
         ["MenuSettings"] = "Settings...",
         ["MenuAbout"] = "About",
@@ -129,6 +131,7 @@ public static class Strings
         ["Save"] = "Kaydet",
         ["Cancel"] = "İptal",
         ["ValidationPickKey"] = "Lütfen bir tuş ve en az bir değiştirici (Ctrl / Alt / Shift / Win) seçin.",
+        ["OverlayHint"] = "Metnin üzerinden sürükleyin · İptal için Esc",
         ["MenuCapture"] = "Şimdi yakala",
         ["MenuSettings"] = "Ayarlar...",
         ["MenuAbout"] = "Hakkında",

@@ -58,6 +58,60 @@ internal static class Screenshot
         strip.Close();
     }
 
+    /// <summary>
+    /// The capture overlay over a synthetic document (never a screen grab), with a selection drawn the
+    /// way a drag draws it. The overlay window is never shown; its paint routine renders into a bitmap.
+    /// </summary>
+    public static void CaptureOverlay(string path, string? themeOverride = null, string lang = "en")
+    {
+        var s = PublicSettings(themeOverride, lang);
+        Strings.Use(s.Language);
+        using var background = SyntheticDesktop(s.Language == "tr");
+        using var overlay = new OverlayForm(s, background, _ => Task.FromResult(CaptureOutcome.Cancelled));
+        var client = new Rectangle(Point.Empty, background.Size);
+        overlay.HintArea = client;
+        overlay.PreviewSelection(new Rectangle(196, 234, 560, 108));
+        // 24-bit targets: GDI text drawn on 32-bit bitmaps loses its alpha and prints as dark fringes.
+        using var bmp = new Bitmap(background.Width, background.Height, PixelFormat.Format24bppRgb);
+        using (var g = Graphics.FromImage(bmp))
+            overlay.PaintOverlay(g, client);
+        SavePng(bmp, path);
+    }
+
+    private static Bitmap SyntheticDesktop(bool turkish)
+    {
+        var bmp = new Bitmap(960, 540, PixelFormat.Format24bppRgb);
+        using var g = Graphics.FromImage(bmp);
+        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+        g.Clear(Color.FromArgb(38, 70, 110));
+        var page = new Rectangle(160, 96, 640, 400);
+        using (var shadow = new SolidBrush(Color.FromArgb(60, 0, 0, 0))) g.FillRectangle(shadow, page with { X = page.X + 4, Y = page.Y + 6 });
+        g.FillRectangle(Brushes.White, page);
+        using (var bar = new SolidBrush(Color.FromArgb(241, 243, 246))) g.FillRectangle(bar, page with { Height = 36 });
+        using var titleFont = new Font("Segoe UI", 10f);
+        using var headFont = new Font("Segoe UI Semibold", 15f);
+        using var bodyFont = new Font("Segoe UI", 11f);
+        TextRenderer.DrawText(g, turkish ? "notlar.txt - Not Defteri" : "notes.txt - Notepad", titleFont, new Point(page.X + 14, page.Y + 9), Color.FromArgb(60, 64, 70));
+        TextRenderer.DrawText(g, turkish ? "Toplantı notları" : "Meeting notes", headFont, new Point(page.X + 36, page.Y + 64), Color.FromArgb(25, 28, 33));
+        string[] lines = turkish
+            ? new[] { "Fatura numarası: TR-2026-0418", "Teslim tarihi: 14 Kasım, sabah 10:30", "Adres: Atatürk Cad. No 12, İzmir" }
+            : new[] { "Invoice number: INV-2026-0418", "Delivery date: 14 November, 10:30 am", "Address: 12 Harbour Street, Portsmouth" };
+        int y = page.Y + 148;
+        foreach (string line in lines)
+        {
+            TextRenderer.DrawText(g, line, bodyFont, new Point(page.X + 44, y), Color.FromArgb(40, 44, 52));
+            y += 36;
+        }
+        return bmp;
+    }
+
+    private static void SavePng(Bitmap bmp, string path)
+    {
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+        bmp.Save(path, ImageFormat.Png);
+    }
+
     private static void Save(Control control, string path)
     {
         using var bmp = new Bitmap(control.Width, control.Height);

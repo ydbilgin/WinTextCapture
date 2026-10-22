@@ -44,6 +44,7 @@ internal static class Program
             {
                 case "--screenshot": Screenshot.CaptureSettings(args[1], theme, lang); break;
                 case "--screenshot-tray": Screenshot.CaptureTrayMenu(args[1], theme, lang); break;
+                case "--screenshot-overlay": Screenshot.CaptureOverlay(args[1], theme, lang); break;
                 default: return 2;
             }
             return 0;
