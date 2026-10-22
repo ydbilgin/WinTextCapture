@@ -75,6 +75,9 @@ internal static class Program
         Run("overlay outline and size badge use the theme accent", OverlayOutlineUsesThemeAccent);
         Run("size badge stays on screen next to the selection", OverlayBadgePlacement);
         Run("hint pill sits at the top of the monitor under the cursor", OverlayHintPlacement);
+        Run("toast content has a bold first line and detail for every outcome", ToastContentPerOutcome);
+        Run("toast stripe is green for copied and amber otherwise, from the theme", ToastStripeColours);
+        Run("toast keeps its 2.2 s timing and never activates", ToastTimingAndNoActivate);
 
         Console.WriteLine($"Passed: {_passed}");
         Console.WriteLine($"Failed: {_failed}");
@@ -876,6 +879,63 @@ internal static class Program
             True(hint.Top < 60);
         }
         Strings.Use("en");
+    }
+
+    private static void ToastContentPerOutcome()
+    {
+        Strings.Use("en");
+        var copied = CaptureMessageFormatter.Toast(CaptureOutcome.Copied("hello\r\nworld"))!;
+        Equal("Copied", copied.Title);
+        Equal("hello world", copied.Body);
+        True(copied.Success);
+        Equal("Text copied to clipboard.", CaptureMessageFormatter.Toast(CaptureOutcome.Copied(" "))!.Body);
+        string prefix = new string('a', 76);
+        Equal(prefix + "...", CaptureMessageFormatter.Toast(CaptureOutcome.Copied(prefix + "\U0001F600suffix"))!.Body);
+
+        var noText = CaptureMessageFormatter.Toast(CaptureOutcome.NoText)!;
+        Equal("No text found", noText.Title);
+        Equal("Clipboard unchanged.", noText.Body);
+        True(!noText.Success);
+        Equal("Clipboard unchanged", CaptureMessageFormatter.Toast(CaptureOutcome.ClipboardUnchanged)!.Title);
+        Equal("OCR found text, but clipboard did not change.", CaptureMessageFormatter.Toast(CaptureOutcome.ClipboardUnchanged)!.Body);
+        Equal("Capture failed", CaptureMessageFormatter.Toast(CaptureOutcome.Error)!.Title);
+        Equal("Capture already running", CaptureMessageFormatter.Toast(CaptureOutcome.Busy)!.Title);
+        Equal<ToastContent?>(null, CaptureMessageFormatter.Toast(CaptureOutcome.Cancelled));
+
+        Strings.Use("tr");
+        Equal("Kopyaland\u0131", CaptureMessageFormatter.Toast(CaptureOutcome.Copied("x"))!.Title);
+        Equal("Metin bulunamad\u0131", CaptureMessageFormatter.Toast(CaptureOutcome.NoText)!.Title);
+        Strings.Use("en");
+    }
+
+    private static void ToastStripeColours()
+    {
+        foreach (var theme in new[] { Theme.Dark, Theme.Light })
+        {
+            using var copied = new ToastForm(new ToastContent("Copied", "preview", Success: true), theme);
+            using var missing = new ToastForm(new ToastContent("No text found", "", Success: false), theme);
+            True(!copied.Visible && !missing.Visible);
+            Equal(theme.Success, copied.StripeColor);
+            Equal(theme.Warning, missing.StripeColor);
+            True(theme.Success != theme.Warning);
+
+            using var bitmap = new Bitmap(copied.ClientSize.Width, copied.ClientSize.Height);
+            using (var g = Graphics.FromImage(bitmap)) copied.PaintCard(g);
+            Equal(theme.Success.ToArgb(), bitmap.GetPixel(2, bitmap.Height / 2).ToArgb());
+            Equal(theme.Surface.ToArgb(), bitmap.GetPixel(bitmap.Width - 4, bitmap.Height / 2).ToArgb());
+        }
+    }
+
+    private static void ToastTimingAndNoActivate()
+    {
+        using var toast = new ToastForm(new ToastContent("Copied", "preview", Success: true), Theme.Dark);
+        var timer = (System.Windows.Forms.Timer)typeof(ToastForm).GetField("_timer", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(toast)!;
+        Equal(2200, timer.Interval);
+        True((bool)typeof(ToastForm).GetProperty("ShowWithoutActivation", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(toast)!);
+        var cp = (CreateParams)typeof(ToastForm).GetProperty("CreateParams", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(toast)!;
+        True((cp.ExStyle & 0x08000000) != 0);
+        True(toast.TopMost);
+        True(!toast.ShowInTaskbar);
     }
 
     private static void Run(string name, Action test)
