@@ -1,0 +1,41 @@
+@out docs/media/social-preview.svg
+@png docs/media/social-preview.png 1280x640
+@wrap tagline chars=36 lines=2 line_height=46 center=370
+---
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0B1A2B"/><stop offset="1" stop-color="#10324F"/></linearGradient>
+<radialGradient id="glow" cx="0.78" cy="0.45" r="0.55"><stop offset="0" stop-color="#53D3FF" stop-opacity="0.22"/><stop offset="1" stop-color="#53D3FF" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1280" height="640" fill="url(#bg)"/><rect width="1280" height="640" fill="url(#glow)"/>
+<g font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif">
+<image href="{{icon_data|raw}}" x="88" y="104" width="112" height="112"/>
+<text x="88" y="300" font-size="76" font-weight="700" fill="#F0F6FC">{{name}}</text>
+{{#tagline_lines}}
+<text x="88" y="{{y}}" font-size="36" fill="#C9D8E6">{{text}}</text>
+{{/tagline_lines}}
+<g font-size="26" fill="#E6EEF6" font-weight="600">
+{{#hero}}
+<rect x="88" y="436" width="64" height="44" rx="8" fill="#16283C" stroke="#3B5673" stroke-width="2"/><text x="120" y="467" text-anchor="middle">Win</text>
+<text x="164" y="467" fill="#7F94AA" font-weight="400">+</text>
+<rect x="186" y="436" width="76" height="44" rx="8" fill="#16283C" stroke="#3B5673" stroke-width="2"/><text x="224" y="467" text-anchor="middle">Shift</text>
+<text x="274" y="467" fill="#7F94AA" font-weight="400">+</text>
+<rect x="296" y="436" width="44" height="44" rx="8" fill="#16283C" stroke="#3B5673" stroke-width="2"/><text x="318" y="467" text-anchor="middle">T</text>
+<text x="362" y="467" fill="#9FB3C8" font-weight="400">→ drag a box → paste</text>
+{{/hero}}
+</g>
+<text x="88" y="568" font-size="24" fill="#8BA0B5">{{subtitle}}</text>
+<text x="1192" y="568" font-size="24" fill="#53D3FF" text-anchor="end" font-weight="600">github.com/{{repo}}</text>
+<g transform="translate(860,170)">
+<rect x="0" y="0" width="340" height="270" rx="14" fill="#F4F8FA" fill-opacity="0.06" stroke="#FFFFFF" stroke-opacity="0.10"/>
+<rect x="34" y="40" width="210" height="14" rx="7" fill="#D8EDF7" fill-opacity="0.35"/>
+<rect x="34" y="84" width="270" height="14" rx="7" fill="#D8EDF7" fill-opacity="0.9"/>
+<rect x="34" y="118" width="230" height="14" rx="7" fill="#D8EDF7" fill-opacity="0.9"/>
+<rect x="34" y="152" width="250" height="14" rx="7" fill="#D8EDF7" fill-opacity="0.9"/>
+<rect x="20" y="70" width="300" height="110" rx="4" fill="none" stroke="#53D3FF" stroke-width="3"/>
+<circle cx="320" cy="180" r="10" fill="#53D3FF"/>
+<rect x="20" y="192" width="92" height="26" rx="6" fill="#53D3FF"/><text x="66" y="211" font-size="16" font-weight="700" fill="#0B1A2B" text-anchor="middle">Copied</text>
+<rect x="34" y="236" width="180" height="14" rx="7" fill="#D8EDF7" fill-opacity="0.35"/>
+</g>
+</g>
+</svg>

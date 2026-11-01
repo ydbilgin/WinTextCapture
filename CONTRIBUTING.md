@@ -31,8 +31,9 @@ person to try, so please say in your pull request what you tried by hand.
 - If you change how a window looks, regenerate the pictures in `docs/` with the `--screenshot` modes
   (see the README, "Build from source").
 - No network code, telemetry or new runtime dependencies, please.
-- The README hero, feature table, comparison, settings gallery and social preview are generated from
-  `docs/showcase/showcase.yml`; see [docs/showcase/UPDATING.md](docs/showcase/UPDATING.md) before changing them.
+- The README hero, feature grid, comparison, settings gallery and social preview are generated: content from
+  `docs/showcase/showcase.yml`, design from `docs/showcase/templates/`. See
+  [docs/showcase/UPDATING.md](docs/showcase/UPDATING.md) before changing them.
 
 ## Be kind
 

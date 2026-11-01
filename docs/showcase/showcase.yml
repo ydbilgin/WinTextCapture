@@ -1,11 +1,11 @@
-# Single source of truth for the README hero, feature table, comparison, gallery and social preview.
+# Content for the README showcase blocks and the social preview. The look lives in docs/showcase/templates/.
 # Edit, then run: python3 docs/showcase/showcase.py   (see docs/showcase/UPDATING.md)
 
 name: WinTextCapture
 repo: ydbilgin/WinTextCapture
 tagline: Copy any text you can see on screen.
-description: "A small Windows tray app. Press Win + Shift + T, drag a box over the text, and it is on your clipboard."
-accent: "#53D3FF"
+description: "A small Windows tray app that reads text from any part of the screen with the OCR built into Windows."
+subtitle: "Windows 10 / 11 · built-in Windows OCR · offline · MIT"
 icon: docs/icon.png
 
 readmes:
@@ -22,12 +22,16 @@ badges:
     link: LICENSE
 
 hero:
-  banner: false
-  icon_width: 88
+  hotkey:
+    - key: Win
+    - key: Shift
+    - key: T
   media: docs/demo.gif
   alt: "Animated illustration: the hotkey dims the screen, a box is dragged over three lines in a notepad window, a Copied toast appears, and the text is pasted into a mail"
-  width: 800
-  caption: "Illustration of the behaviour, not a screen recording. It is drawn from docs/demo/; the toast and settings window in it are the app's own rendered pictures."
+  caption: "Illustration of the behaviour, not a screen recording. The toast and settings window in it are the app's own rendered pictures."
+  caption_link:
+    text: How it is drawn
+    href: docs/demo/README-demo.md
   nav:
     - label: Download
       link: "https://github.com/ydbilgin/WinTextCapture/releases/latest"
@@ -46,9 +50,6 @@ hero:
     - label: Türkçe
       link: "#türkçe"
 
-features_header:
-  - Feature
-  - What it does
 features:
   - name: One hotkey from anywhere
     text: "`Win + Shift + T` by default, or any key with at least one of Ctrl, Alt, Shift, Win. Double-click the tray icon or use **Capture now** as well."
@@ -68,21 +69,26 @@ features:
     text: "One copy per user session, optional start with Windows, Light / Dark / system theme, English and Turkish interface."
 
 comparison:
-  builtin: "PowerToys Text Extractor · Snipping Tool text actions (Windows 11)"
   intro: "Two Microsoft tools already read text from the screen, and both are good. WinTextCapture is a smaller, single-purpose alternative, not a replacement for either."
+  powertoys: PowerToys Text Extractor
+  snipping: Snipping Tool text actions (Windows 11)
   rows:
     - topic: How you use it
-      builtin: "**Text Extractor:** `Win + Shift + T` (default), drag a box, the text goes to the clipboard. **Snipping Tool:** take a snip, open **Text actions**, copy all or part of the text."
-      tool: "`Win + Shift + T` (changeable), drag a box, the text goes to the clipboard."
+      powertoys: "`Win + Shift + T` (default), drag a box, the text goes to the clipboard"
+      snipping: "Take a snip, open **Text actions**, then copy all or part of the text"
+      tool: "`Win + Shift + T` (changeable), drag a box, the text goes to the clipboard"
     - topic: What you install
-      builtin: "**Text Extractor:** PowerToys, a suite of many utilities. **Snipping Tool:** nothing, it comes with Windows 11."
-      tool: "One portable exe that runs from the tray."
+      powertoys: PowerToys, a suite of many utilities
+      snipping: Nothing; it comes with Windows 11
+      tool: One portable exe that runs from the tray
     - topic: Does differently
-      builtin: "Text Extractor is part of a larger toolkit you may already use. The Snipping Tool keeps the screenshot, so you can also save, mark up or share it."
-      tool: "Only this one job. A toast confirms what was copied after checking the clipboard."
+      powertoys: Part of a larger toolkit you may already use
+      snipping: You keep the screenshot and can save, mark up or share it
+      tool: Only this job; a toast confirms what was copied after checking the clipboard
     - topic: Pick it when
-      builtin: "You already run PowerToys, or you want the image too, or you prefer not to add an app."
-      tool: "You want just text capture, without the rest of PowerToys."
+      powertoys: You already run PowerToys
+      snipping: You want the image too, or prefer not to add an app
+      tool: You want just text capture, without the rest of PowerToys
   outro: "PowerToys Text Extractor uses the same default hotkey. If you run both, change the shortcut in one of them (see [the FAQ](#questions-and-troubleshooting))."
 
 gallery:
@@ -92,14 +98,3 @@ gallery:
   - file: docs/settings-dark.png
     caption: Settings, Dark theme
     alt: Settings in Dark theme
-gallery_columns: 2
-
-art:
-  social:
-    out: docs/media/social-preview.svg
-    png: docs/media/social-preview.png
-    template: docs/showcase/social.svg.tmpl
-    subtitle: "Windows 10 / 11 · built-in Windows OCR · offline · MIT"
-    wrap: 60
-    bg1: "#0B1A2B"
-    bg2: "#10324F"
