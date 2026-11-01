@@ -1,113 +1,134 @@
 <p align="center">
-  <img src="docs/icon.png" alt="WinTextCapture icon" width="96">
+  <img src="docs/icon.png" alt="WinTextCapture icon" width="88">
 </p>
 
 <h1 align="center">WinTextCapture</h1>
 
 <p align="center">
   <strong>Copy any text you can see on screen.</strong><br>
-  Press a hotkey, drag a box over the text, let go: it is on your clipboard.
+  A small Windows tray app: press a hotkey, drag a box over the text, and it is on your clipboard.
 </p>
 
 <p align="center">
-  <a href="https://github.com/ydbilgin/WinTextCapture/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/ydbilgin/WinTextCapture?label=release&color=2ea44f"></a>
-  <a href="https://github.com/ydbilgin/WinTextCapture/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/ydbilgin/WinTextCapture/total?color=success"></a>
-  <img alt="Windows 10 and 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&logoColor=white">
-  <img alt=".NET 9" src="https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white">
-  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/ydbilgin/WinTextCapture?color=blue"></a>
+  <a href="https://github.com/ydbilgin/WinTextCapture/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/ydbilgin/WinTextCapture?include_prereleases&sort=semver"></a>
+  <img alt="Platform: Windows 10 and 11" src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green"></a>
 </p>
 
 <p align="center">
-  <img src="docs/demo.gif" alt="Animated demo: Win + Shift + T dims the screen, a box is dragged over three lines in a notepad window, a Copied toast appears, and the text is pasted into a mail" width="800">
+  <kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> &nbsp;→&nbsp; drag a box &nbsp;→&nbsp; <kbd>Ctrl</kbd> + <kbd>V</kbd>
+</p>
+
+<p align="center">
+  <img src="docs/demo.gif" alt="Animated illustration: the hotkey dims the screen, a box is dragged over three lines in a notepad window, a Copied toast appears, and the text is pasted into a mail" width="800"><br>
+  <sub>Illustration of the behaviour, not a screen recording. It is drawn from <a href="docs/demo/">docs/demo/</a>;
+  the toast and settings window in it are the app's own rendered pictures.</sub>
 </p>
 
 <p align="center">
   <a href="https://github.com/ydbilgin/WinTextCapture/releases/latest"><strong>Download</strong></a>
+  &nbsp;·&nbsp; <a href="#features">Features</a>
+  &nbsp;·&nbsp; <a href="#compared-with-the-windows-options">Compared</a>
   &nbsp;·&nbsp; <a href="#install">Install</a>
-  &nbsp;·&nbsp; <a href="#how-to-use-it">How to use it</a>
-  &nbsp;·&nbsp; <a href="#questions-and-troubleshooting">Troubleshooting</a>
+  &nbsp;·&nbsp; <a href="#use">Use</a>
+  &nbsp;·&nbsp; <a href="#questions-and-troubleshooting">FAQ</a>
   &nbsp;·&nbsp; <a href="#build-from-source">Build</a>
+  &nbsp;·&nbsp; <a href="#türkçe">Türkçe</a>
 </p>
 
-## The problem
-
 A lot of text on screen cannot be selected: an error dialog, a screenshot in a chat, a video, a game menu, a
-scanned PDF. Typing it out by hand is slow and error-prone. PowerToys has a Text Extractor, but installing all of
-PowerToys for one feature is a lot.
+scanned PDF. Typing it out is slow and error-prone. WinTextCapture does this one job. It reads the text with the
+OCR engine that is already part of Windows, so it works offline, with no account, no API key and no network code.
 
-WinTextCapture does just this one job. It uses the OCR engine that is already built into Windows, so it works
-offline, with no account and no API key.
+## Features
 
-## What it does
+| Feature | What it does |
+|---|---|
+| One hotkey from anywhere | `Win + Shift + T` by default, or any key with at least one of Ctrl, Alt, Shift, Win. Double-click the tray icon or use **Capture now** as well. |
+| Drag a box on any screen | The overlay covers every monitor and is per-monitor DPI aware. It shows the box size in pixels; `Esc` cancels. |
+| Windows OCR, on your PC | Uses `Windows.Media.Ocr`. The selection is read locally and nothing is uploaded. |
+| Pick the OCR language | **Automatic** (your Windows profile languages) or any OCR language installed in Windows. |
+| Small and huge selections | A selection is enlarged 2–3x before OCR (3x for short ones), within the size Windows OCR accepts; very large ones are scaled down to fit. |
+| Checked clipboard | The text is written, read back and compared, with a few retries if another app holds the clipboard. "Copied" means it is really there. |
+| Clear feedback | A toast shows the first words of what was copied, or says plainly that no text was found. |
+| Quiet tray app | One copy per user session, optional start with Windows, Light / Dark / system theme, English and Turkish interface. |
 
-- **One hotkey from anywhere:** `Win + Shift + T`, or pick your own.
-- **Drag a box on any screen:** multi-monitor and mixed-DPI aware; `Esc` cancels.
-- **Windows OCR, on your PC:** uses `Windows.Media.Ocr`; nothing is uploaded.
-- **Choose the OCR language** from the ones installed in Windows, or leave it on automatic.
-- **Small and huge selections both work:** tiny text is enlarged before OCR, and very large areas are reduced
-  to the size Windows OCR accepts.
-- **Clear feedback:** a short toast shows what was copied, or says plainly that no text was found. The
-  clipboard is checked before it says "Copied".
-- **Quiet:** lives in the tray, one copy at a time, optional start with Windows, Light, Dark or system theme,
-  English and Turkish.
+## Compared with the Windows options
+
+Two Microsoft tools already read text from the screen, and both are good. WinTextCapture is a smaller, single-purpose
+alternative, not a replacement for either.
+
+| | PowerToys Text Extractor | Snipping Tool text actions (Windows 11) | WinTextCapture |
+|---|---|---|---|
+| **How you use it** | `Win + Shift + T` (default), drag a box, text goes to the clipboard | Take a snip, open **Text actions**, then copy all or part of the text | `Win + Shift + T` (changeable), drag a box, text goes to the clipboard |
+| **What you install** | PowerToys, a suite of many utilities | Nothing; it comes with Windows 11 | One portable exe that runs from the tray |
+| **Does differently** | Part of a larger toolkit you may already use | You keep the screenshot and can save, mark up or share it | Only this job; a toast confirms what was copied after checking the clipboard |
+| **Pick it when** | You already run PowerToys | You want the image too, or prefer not to add an app | You want just text capture, without the rest of PowerToys |
+
+PowerToys Text Extractor uses the same default hotkey. If you run both, change the shortcut in one of them
+(see [the FAQ](#questions-and-troubleshooting)).
 
 ## Install
 
 1. Download **`WinTextCapture.exe`** from the [latest release](https://github.com/ydbilgin/WinTextCapture/releases/latest).
-2. Put it anywhere, for example `%LOCALAPPDATA%\Programs\WinTextCapture\`, and run it. There is no installer,
-   and nothing else to install: the file carries its own .NET runtime.
+2. Put it anywhere, for example `%LOCALAPPDATA%\Programs\WinTextCapture\`, and run it. There is no installer; the
+   release exe carries its own .NET runtime.
 3. To start it with Windows, open **Settings** from the tray icon and tick **Start with Windows**.
 
-Needs Windows 10 version 2004 (build 19041) or later, or Windows 11.
+Needs Windows 10 version 2004 (build 19041) or later, or Windows 11, x64. Windows SmartScreen may warn about a new
+download from a small publisher; choose **More info → Run anyway** if you trust the file.
 
-The pictures here show the current code on `main`, which has a refreshed look (rounded toast card, tidier
-settings and menu). The latest release, v1.0.2, works the same but looks slightly older. To get the new look
-today, [build from source](#build-from-source); it arrives in the next release.
+The pictures here show the current code on `master`, which has a refreshed look (rounded toast card, themed
+settings and menu). The latest release, v1.0.2, works the same but looks slightly older; the new look arrives in
+the next release, or [build from source](#build-from-source) today.
 
-## How to use it
+## Use
 
 1. Press `Win + Shift + T`. The screen dims and shows **Drag over text · Esc to cancel**.
-2. Drag a box over the text.
-3. Let go of the mouse button. A toast shows what was copied.
-4. Paste with `Ctrl + V` wherever you like.
-
-You can also double-click the tray icon, or right-click it and choose **Capture now**.
+2. Drag a box over the text and let go. A toast shows what was copied.
+3. Paste with `Ctrl + V` wherever you like.
 
 <p align="center">
   <img src="docs/selection-dark.png" alt="The dimmed screen during a capture: a blue box over three lines of a notepad page, its size in pixels below it, and the hint Drag over text, Esc to cancel at the top" width="640">
 </p>
-
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/toast-copied-dark.png">
     <img src="docs/toast-copied-light.png" alt="Toast after a capture: Copied, followed by the first words of the text" width="388">
-  </picture>
+  </picture><br>
+  <sub>Rendered by the app's own <code>--screenshot</code> modes, with default settings and a made-up page.</sub>
 </p>
 
-**Tray menu:** Capture now, Settings, About, Exit.
-
-**Settings** (right-click the tray icon, then **Settings...**):
+**Tray menu:** Capture now, Settings..., About, Exit. **Settings:**
 
 <p align="center">
   <img src="docs/settings.png" alt="Settings in Light theme: capture hotkey, OCR recognition language, start with Windows, language and theme" width="400">
   <img src="docs/settings-dark.png" alt="Settings in Dark theme" width="400">
 </p>
 
-- **Capture hotkey:** click the box, then press the keys you want. It takes priority over the Windows shortcut
-  for the same keys.
-- **Recognition language:** pick the language of the text you capture. For English text in games or apps,
+- **Capture hotkey:** click the box, then press the keys you want. It takes priority over a Windows shortcut on
+  the same keys.
+- **Recognition language:** the language of the text you capture. For English text in games or apps,
   `English (en-US)` usually beats **Automatic**.
 - **Start with Windows**, the interface **Language** (English or Turkish) and the **Theme**.
-
-**Where things are kept**
 
 | What | Where |
 |---|---|
 | Settings | `%APPDATA%\WinTextCapture\settings.json` |
-| Error log | `%APPDATA%\WinTextCapture\error.log` (small, size-limited) |
-| Start with Windows | the usual `Run` entry in the current user's registry |
+| Error log | `%APPDATA%\WinTextCapture\error.log` (capped at 256 KB) |
+| Start with Windows | a `WinTextCapture` value under `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` |
 
 ## Questions and troubleshooting
+
+**Does anything leave my PC?**
+No. There is no network code. The capture, the OCR and the clipboard stay on your PC. While OCR runs, the
+selection is written to a temporary PNG in `%TEMP%` and deleted right after.
+
+**Does it need admin rights?** No. Everything it writes is per user: the files above and the current user's
+`Run` entry.
+
+**How do I uninstall it?** Untick **Start with Windows** in Settings (this removes the `Run` entry), choose
+**Exit** from the tray menu, then delete the exe and `%APPDATA%\WinTextCapture\`.
 
 **The hotkey does nothing, or PowerToys opens instead.**
 PowerToys Text Extractor uses the same `Win + Shift + T` by default. WinTextCapture usually wins, but not
@@ -119,26 +140,34 @@ languages whose OCR support is installed: add one under **Windows Settings → T
 region** (the language's optional features include OCR).
 
 **The text comes out wrong.**
-Pick the exact language instead of **Automatic**. Very small text is enlarged automatically, but a very wide or
-tall box is shrunk to the size Windows OCR accepts; capture a smaller area if the text gets too small.
+Pick the exact language instead of **Automatic**. Small text is enlarged automatically, but a very wide or tall
+box is shrunk to the size Windows OCR accepts; capture a smaller area if the text gets too small.
 
 **The toast says the clipboard did not change.**
 Another program was holding the clipboard. WinTextCapture retries a few times and only says "Copied" after it
 has checked. Try again.
 
-**Start with Windows points at an old copy.**
-Open **Settings** and save with **Start with Windows** ticked: the entry is updated to the copy you are running.
-On start, an entry whose program no longer exists is repaired; an entry pointing at another existing copy is
-left alone.
+**Start with Windows points at an old copy, or my settings were reset.**
+Save Settings with **Start with Windows** ticked to point the entry at the copy you are running; on start, an
+entry whose program no longer exists is repaired. A missing or unreadable settings file falls back to defaults,
+and a single bad value (for example an invalid hotkey) falls back on its own while the rest is kept.
 
-**My settings were reset.**
-A missing or unreadable settings file falls back to defaults, and a single bad value (for example an invalid
-hotkey) falls back on its own while the rest is kept. A failed save keeps the previous settings and hotkey.
+## How it works
 
-## Privacy
+```mermaid
+flowchart LR
+    H["Global hotkey<br/>KeyboardHook.cs"] --> T["Tray app<br/>TrayApplicationContext.cs"]
+    T --> O["Overlay and selection<br/>OverlayForm.cs"]
+    O --> P["Scale for OCR<br/>OcrImagePreprocessor.cs"]
+    P --> W["Windows.Media.Ocr"]
+    W --> C["Write and verify<br/>ClipboardWriter.cs"]
+    C --> N["Toast<br/>ToastForm.cs"]
+```
 
-WinTextCapture has no network code. The capture, the OCR and the clipboard all stay on your PC. It keeps only
-its settings and a small error log in `%APPDATA%\WinTextCapture\`, and a startup entry if you ask for one.
+A low-level keyboard hook watches for the capture combination. The overlay freezes a picture of all monitors,
+you drag a box, and that part of the picture is scaled and passed to Windows OCR. The text is written to the
+clipboard, read back to confirm it, and summarised in a toast. Settings, start-with-Windows and the error log
+live in `Settings.cs`, `AutoStart.cs` and `CrashLogger.cs`.
 
 ## Build from source
 
@@ -148,54 +177,39 @@ You need the [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) on W
 git clone https://github.com/ydbilgin/WinTextCapture.git
 cd WinTextCapture
 dotnet run -c Release
-```
 
-A single exe that carries its own runtime, like the release:
-
-```powershell
+# a single exe that carries its own runtime, like the release
 dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
 
-**Tests.** A small test program with no extra packages. Some checks open test windows, so run it where a
-window may appear briefly (or on a hidden desktop). It never starts the tray app and never touches the startup
-registry entry.
+**Tests** are a small console program with no extra packages. Some checks open test windows briefly; it never
+starts the tray app and never touches the startup registry entry. It exits with `0` only when everything passed.
 
 ```powershell
 dotnet build tests\WinTextCapture.Tests\WinTextCapture.Tests.csproj -c Release
 dotnet run --project tests\WinTextCapture.Tests\WinTextCapture.Tests.csproj -c Release --no-build
 ```
 
-It prints the passed and failed counts and exits with `0` only when everything passed. Live desktop use,
-mixed-DPI monitors, OCR accuracy and a busy clipboard still need a person to try.
+**Pictures.** The PNGs in `docs/` come from the app itself, drawn off-screen:
+`WinTextCapture.exe --screenshot docs/settings-dark.png Dark en`, `--screenshot-toast`, `--screenshot-tray` and
+`--screenshot-overlay` take the same theme and language arguments. The illustration `docs/demo.gif` is re-rendered
+with `node docs/demo/render.mjs` (see [docs/demo/README-demo.md](docs/demo/README-demo.md)).
 
-**Pictures.** The README pictures come from the app itself, drawn off-screen with default settings and a
-made-up notepad page:
+## Contributing, security, license
 
-```powershell
-WinTextCapture.exe --screenshot docs/settings-dark.png Dark en
-WinTextCapture.exe --screenshot-toast docs/toast-copied-dark.png Dark en copied
-```
+Bug reports and small, focused pull requests are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). Please report
+security problems privately as described in [SECURITY.md](SECURITY.md). Released under the [MIT License](LICENSE).
 
-Other modes: `--screenshot-tray` and `--screenshot-overlay`, with the same theme and language arguments.
+## Türkçe
 
-**Demo GIF.** `docs/demo.gif` is an animation drawn from `docs/demo/scene.html`; re-render it with
-`node docs/demo/render.mjs`. See [docs/demo/README-demo.md](docs/demo/README-demo.md).
+**WinTextCapture**, ekranda gördüğünüz ama seçemediğiniz metni (hata pencereleri, ekran görüntüleri, videolar,
+oyun menüleri, taranmış PDF'ler) panoya kopyalayan küçük bir Windows tepsi uygulamasıdır. Windows'un kendi OCR
+motorunu kullanır; internet bağlantısı, hesap ya da API anahtarı gerekmez.
 
-## How the code is laid out
-
-| File | Job |
-|---|---|
-| `TrayApplicationContext.cs` | tray icon, menu, settings, starting a capture, showing the result |
-| `KeyboardHook.cs`, `KeyboardHookState.cs` | the global hotkey and its testable state machine |
-| `OverlayForm.cs` | the dimmed screen, the selection, OCR and the clipboard write |
-| `OcrImagePreprocessor.cs` | enlarges small selections and limits large ones before OCR |
-| `ClipboardWriter.cs` | retries and checks clipboard writes |
-| `CaptureMessageFormatter.cs`, `ToastForm.cs` | the toast text and card |
-| `Settings.cs`, `SettingsForm.cs` | loading, checking and saving preferences, and the settings window |
-| `AutoStartDecision.cs`, `AutoStart.cs` | the start-with-Windows entry |
-| `CrashLog.cs`, `CrashLogger.cs` | the size-limited error log |
-| `tests/WinTextCapture.Tests` | the test program |
-
-## License
-
-[MIT](LICENSE)
+- **Kurulum:** [Son sürümden](https://github.com/ydbilgin/WinTextCapture/releases/latest) `WinTextCapture.exe`
+  dosyasını indirip çalıştırın. Kurulum sihirbazı yoktur, .NET kurmanız gerekmez.
+- **Kullanım:** `Win + Shift + T` tuşlarına basın, metnin üzerinden bir kutu sürükleyin, bırakın; metin panodadır.
+  `Esc` iptal eder.
+- **Ayarlar:** Tepsi simgesine sağ tıklayıp **Ayarlar...** ile kısayolu, OCR dilini, Windows ile başlatmayı, tema ve
+  arayüz dilini (Türkçe / İngilizce) değiştirebilirsiniz.
+- Ayrıntılar için: [Özellikler](#features) · [Sorular](#questions-and-troubleshooting) · [Kaynaktan derleme](#build-from-source)

@@ -1,0 +1,60 @@
+name: Bug report
+description: Something does not work as described.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please check the [troubleshooting section](https://github.com/ydbilgin/WinTextCapture#questions-and-troubleshooting) first.
+        Do not paste personal text from your captures; a made-up example is enough.
+  - type: input
+    id: version
+    attributes:
+      label: WinTextCapture version
+      description: Shown under About in the tray menu, or the release you downloaded.
+      placeholder: "1.0.2"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: "Run `winver` to see it."
+      placeholder: "Windows 11 24H2 (build 26100)"
+    validations:
+      required: true
+  - type: input
+    id: setup
+    attributes:
+      label: Hotkey, OCR language and displays
+      description: Your capture hotkey, the Recognition language setting, and your monitor setup and scaling if relevant.
+      placeholder: "Win + Shift + T, English (en-US), two monitors at 100% and 150%"
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Press Win + Shift + T
+        2. Drag a box over ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What happened instead, including the toast text.
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Error log (optional)
+      description: "The relevant part of `%APPDATA%\\WinTextCapture\\error.log`, if there is one. Remove anything personal."
+      render: text

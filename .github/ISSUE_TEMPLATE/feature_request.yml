@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest an improvement.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: WinTextCapture aims to do one job well. Small improvements to capture, OCR and feedback fit best.
+  - type: input
+    id: version
+    attributes:
+      label: WinTextCapture version
+      placeholder: "1.0.2"
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 24H2"
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation, not only the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you have tried
+      description: For example a setting, PowerToys Text Extractor or the Snipping Tool.

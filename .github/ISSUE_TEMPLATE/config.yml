@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security problem
+    url: https://github.com/ydbilgin/WinTextCapture/security/policy
+    about: Please report security problems privately, not as a public issue.
+  - name: Questions and troubleshooting
+    url: https://github.com/ydbilgin/WinTextCapture#questions-and-troubleshooting
+    about: Common problems (hotkey clashes, no text found, clipboard busy) are answered in the README.
