@@ -1,0 +1,105 @@
+# Single source of truth for the README hero, feature table, comparison, gallery and social preview.
+# Edit, then run: python3 docs/showcase/showcase.py   (see docs/showcase/UPDATING.md)
+
+name: WinTextCapture
+repo: ydbilgin/WinTextCapture
+tagline: Copy any text you can see on screen.
+description: "A small Windows tray app. Press Win + Shift + T, drag a box over the text, and it is on your clipboard."
+accent: "#53D3FF"
+icon: docs/icon.png
+
+readmes:
+  - README.md
+
+badges:
+  - alt: Latest release
+    image: "https://img.shields.io/github/v/release/ydbilgin/WinTextCapture?include_prereleases&sort=semver"
+    link: "https://github.com/ydbilgin/WinTextCapture/releases/latest"
+  - alt: "Platform: Windows 10 and 11"
+    image: "https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6"
+  - alt: "License: MIT"
+    image: "https://img.shields.io/badge/license-MIT-green"
+    link: LICENSE
+
+hero:
+  banner: false
+  icon_width: 88
+  media: docs/demo.gif
+  alt: "Animated illustration: the hotkey dims the screen, a box is dragged over three lines in a notepad window, a Copied toast appears, and the text is pasted into a mail"
+  width: 800
+  caption: "Illustration of the behaviour, not a screen recording. It is drawn from docs/demo/; the toast and settings window in it are the app's own rendered pictures."
+  nav:
+    - label: Download
+      link: "https://github.com/ydbilgin/WinTextCapture/releases/latest"
+    - label: Features
+      link: "#features"
+    - label: Compared
+      link: "#compared-with-the-windows-options"
+    - label: Install
+      link: "#install"
+    - label: Use
+      link: "#use"
+    - label: FAQ
+      link: "#questions-and-troubleshooting"
+    - label: Build
+      link: "#build-from-source"
+    - label: Türkçe
+      link: "#türkçe"
+
+features_header:
+  - Feature
+  - What it does
+features:
+  - name: One hotkey from anywhere
+    text: "`Win + Shift + T` by default, or any key with at least one of Ctrl, Alt, Shift, Win. Double-click the tray icon or use **Capture now** as well."
+  - name: Drag a box on any screen
+    text: "The overlay covers every monitor and is per-monitor DPI aware. It shows the box size in pixels; `Esc` cancels."
+  - name: Windows OCR, on your PC
+    text: "Uses `Windows.Media.Ocr`. The selection is read locally and nothing is uploaded."
+  - name: Pick the OCR language
+    text: "**Automatic** (your Windows profile languages) or any OCR language installed in Windows."
+  - name: Small and huge selections
+    text: "A selection is enlarged 2–3x before OCR (3x for short ones), within the size Windows OCR accepts; very large ones are scaled down to fit."
+  - name: Checked clipboard
+    text: "The text is written, read back and compared, with a few retries if another app holds the clipboard. Copied means it is really there."
+  - name: Clear feedback
+    text: "A toast shows the first words of what was copied, or says plainly that no text was found."
+  - name: Quiet tray app
+    text: "One copy per user session, optional start with Windows, Light / Dark / system theme, English and Turkish interface."
+
+comparison:
+  builtin: "PowerToys Text Extractor · Snipping Tool text actions (Windows 11)"
+  intro: "Two Microsoft tools already read text from the screen, and both are good. WinTextCapture is a smaller, single-purpose alternative, not a replacement for either."
+  rows:
+    - topic: How you use it
+      builtin: "**Text Extractor:** `Win + Shift + T` (default), drag a box, the text goes to the clipboard. **Snipping Tool:** take a snip, open **Text actions**, copy all or part of the text."
+      tool: "`Win + Shift + T` (changeable), drag a box, the text goes to the clipboard."
+    - topic: What you install
+      builtin: "**Text Extractor:** PowerToys, a suite of many utilities. **Snipping Tool:** nothing, it comes with Windows 11."
+      tool: "One portable exe that runs from the tray."
+    - topic: Does differently
+      builtin: "Text Extractor is part of a larger toolkit you may already use. The Snipping Tool keeps the screenshot, so you can also save, mark up or share it."
+      tool: "Only this one job. A toast confirms what was copied after checking the clipboard."
+    - topic: Pick it when
+      builtin: "You already run PowerToys, or you want the image too, or you prefer not to add an app."
+      tool: "You want just text capture, without the rest of PowerToys."
+  outro: "PowerToys Text Extractor uses the same default hotkey. If you run both, change the shortcut in one of them (see [the FAQ](#questions-and-troubleshooting))."
+
+gallery:
+  - file: docs/settings.png
+    caption: Settings, Light theme
+    alt: "Settings in Light theme: capture hotkey, OCR recognition language, start with Windows, language and theme"
+  - file: docs/settings-dark.png
+    caption: Settings, Dark theme
+    alt: Settings in Dark theme
+gallery_columns: 2
+
+art:
+  social:
+    out: docs/media/social-preview.svg
+    png: docs/media/social-preview.png
+    template: docs/showcase/social.svg.tmpl
+    subtitle: "Windows 10 / 11 · built-in Windows OCR · offline · MIT"
+    wrap: 60
+    bg1: "#0B1A2B"
+    bg2: "#10324F"

@@ -1,40 +1,28 @@
-<p align="center">
-  <img src="docs/icon.png" alt="WinTextCapture icon" width="88">
-</p>
-
+<!-- showcase:hero:start (generated from docs/showcase/showcase.yml) -->
+<p align="center"><img src="docs/icon.png" alt="WinTextCapture icon" width="88"></p>
 <h1 align="center">WinTextCapture</h1>
-
 <p align="center">
   <strong>Copy any text you can see on screen.</strong><br>
-  A small Windows tray app: press a hotkey, drag a box over the text, and it is on your clipboard.
+  A small Windows tray app. Press Win + Shift + T, drag a box over the text, and it is on your clipboard.
 </p>
-
 <p align="center">
-  <a href="https://github.com/ydbilgin/WinTextCapture/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/ydbilgin/WinTextCapture?include_prereleases&sort=semver"></a>
+  <a href="https://github.com/ydbilgin/WinTextCapture/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/ydbilgin/WinTextCapture?include_prereleases&amp;sort=semver"></a>
   <img alt="Platform: Windows 10 and 11" src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green"></a>
 </p>
-
+<p align="center"><img src="docs/demo.gif" alt="Animated illustration: the hotkey dims the screen, a box is dragged over three lines in a notepad window, a Copied toast appears, and the text is pasted into a mail" width="800"></p>
+<p align="center"><sub>Illustration of the behaviour, not a screen recording. It is drawn from docs/demo/; the toast and settings window in it are the app&#x27;s own rendered pictures.</sub></p>
 <p align="center">
-  <kbd>Win</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> &nbsp;→&nbsp; drag a box &nbsp;→&nbsp; <kbd>Ctrl</kbd> + <kbd>V</kbd>
+  <a href="https://github.com/ydbilgin/WinTextCapture/releases/latest"><b>Download</b></a> ·
+  <a href="#features"><b>Features</b></a> ·
+  <a href="#compared-with-the-windows-options"><b>Compared</b></a> ·
+  <a href="#install"><b>Install</b></a> ·
+  <a href="#use"><b>Use</b></a> ·
+  <a href="#questions-and-troubleshooting"><b>FAQ</b></a> ·
+  <a href="#build-from-source"><b>Build</b></a> ·
+  <a href="#türkçe"><b>Türkçe</b></a>
 </p>
-
-<p align="center">
-  <img src="docs/demo.gif" alt="Animated illustration: the hotkey dims the screen, a box is dragged over three lines in a notepad window, a Copied toast appears, and the text is pasted into a mail" width="800"><br>
-  <sub>Illustration of the behaviour, not a screen recording. It is drawn from <a href="docs/demo/">docs/demo/</a>;
-  the toast and settings window in it are the app's own rendered pictures.</sub>
-</p>
-
-<p align="center">
-  <a href="https://github.com/ydbilgin/WinTextCapture/releases/latest"><strong>Download</strong></a>
-  &nbsp;·&nbsp; <a href="#features">Features</a>
-  &nbsp;·&nbsp; <a href="#compared-with-the-windows-options">Compared</a>
-  &nbsp;·&nbsp; <a href="#install">Install</a>
-  &nbsp;·&nbsp; <a href="#use">Use</a>
-  &nbsp;·&nbsp; <a href="#questions-and-troubleshooting">FAQ</a>
-  &nbsp;·&nbsp; <a href="#build-from-source">Build</a>
-  &nbsp;·&nbsp; <a href="#türkçe">Türkçe</a>
-</p>
+<!-- showcase:hero:end -->
 
 A lot of text on screen cannot be selected: an error dialog, a screenshot in a chat, a video, a game menu, a
 scanned PDF. Typing it out is slow and error-prone. WinTextCapture does this one job. It reads the text with the
@@ -42,31 +30,33 @@ OCR engine that is already part of Windows, so it works offline, with no account
 
 ## Features
 
+<!-- showcase:features:start (generated from docs/showcase/showcase.yml) -->
 | Feature | What it does |
-|---|---|
-| One hotkey from anywhere | `Win + Shift + T` by default, or any key with at least one of Ctrl, Alt, Shift, Win. Double-click the tray icon or use **Capture now** as well. |
-| Drag a box on any screen | The overlay covers every monitor and is per-monitor DPI aware. It shows the box size in pixels; `Esc` cancels. |
-| Windows OCR, on your PC | Uses `Windows.Media.Ocr`. The selection is read locally and nothing is uploaded. |
-| Pick the OCR language | **Automatic** (your Windows profile languages) or any OCR language installed in Windows. |
-| Small and huge selections | A selection is enlarged 2–3x before OCR (3x for short ones), within the size Windows OCR accepts; very large ones are scaled down to fit. |
-| Checked clipboard | The text is written, read back and compared, with a few retries if another app holds the clipboard. "Copied" means it is really there. |
-| Clear feedback | A toast shows the first words of what was copied, or says plainly that no text was found. |
-| Quiet tray app | One copy per user session, optional start with Windows, Light / Dark / system theme, English and Turkish interface. |
+| --- | --- |
+| **One hotkey from anywhere** | `Win + Shift + T` by default, or any key with at least one of Ctrl, Alt, Shift, Win. Double-click the tray icon or use **Capture now** as well. |
+| **Drag a box on any screen** | The overlay covers every monitor and is per-monitor DPI aware. It shows the box size in pixels; `Esc` cancels. |
+| **Windows OCR, on your PC** | Uses `Windows.Media.Ocr`. The selection is read locally and nothing is uploaded. |
+| **Pick the OCR language** | **Automatic** (your Windows profile languages) or any OCR language installed in Windows. |
+| **Small and huge selections** | A selection is enlarged 2–3x before OCR (3x for short ones), within the size Windows OCR accepts; very large ones are scaled down to fit. |
+| **Checked clipboard** | The text is written, read back and compared, with a few retries if another app holds the clipboard. Copied means it is really there. |
+| **Clear feedback** | A toast shows the first words of what was copied, or says plainly that no text was found. |
+| **Quiet tray app** | One copy per user session, optional start with Windows, Light / Dark / system theme, English and Turkish interface. |
+<!-- showcase:features:end -->
 
 ## Compared with the Windows options
 
-Two Microsoft tools already read text from the screen, and both are good. WinTextCapture is a smaller, single-purpose
-alternative, not a replacement for either.
+<!-- showcase:comparison:start (generated from docs/showcase/showcase.yml) -->
+Two Microsoft tools already read text from the screen, and both are good. WinTextCapture is a smaller, single-purpose alternative, not a replacement for either.
 
-| | PowerToys Text Extractor | Snipping Tool text actions (Windows 11) | WinTextCapture |
-|---|---|---|---|
-| **How you use it** | `Win + Shift + T` (default), drag a box, text goes to the clipboard | Take a snip, open **Text actions**, then copy all or part of the text | `Win + Shift + T` (changeable), drag a box, text goes to the clipboard |
-| **What you install** | PowerToys, a suite of many utilities | Nothing; it comes with Windows 11 | One portable exe that runs from the tray |
-| **Does differently** | Part of a larger toolkit you may already use | You keep the screenshot and can save, mark up or share it | Only this job; a toast confirms what was copied after checking the clipboard |
-| **Pick it when** | You already run PowerToys | You want the image too, or prefer not to add an app | You want just text capture, without the rest of PowerToys |
+| | PowerToys Text Extractor · Snipping Tool text actions (Windows 11) | WinTextCapture |
+| --- | --- | --- |
+| **How you use it** | **Text Extractor:** `Win + Shift + T` (default), drag a box, the text goes to the clipboard. **Snipping Tool:** take a snip, open **Text actions**, copy all or part of the text. | `Win + Shift + T` (changeable), drag a box, the text goes to the clipboard. |
+| **What you install** | **Text Extractor:** PowerToys, a suite of many utilities. **Snipping Tool:** nothing, it comes with Windows 11. | One portable exe that runs from the tray. |
+| **Does differently** | Text Extractor is part of a larger toolkit you may already use. The Snipping Tool keeps the screenshot, so you can also save, mark up or share it. | Only this one job. A toast confirms what was copied after checking the clipboard. |
+| **Pick it when** | You already run PowerToys, or you want the image too, or you prefer not to add an app. | You want just text capture, without the rest of PowerToys. |
 
-PowerToys Text Extractor uses the same default hotkey. If you run both, change the shortcut in one of them
-(see [the FAQ](#questions-and-troubleshooting)).
+PowerToys Text Extractor uses the same default hotkey. If you run both, change the shortcut in one of them (see [the FAQ](#questions-and-troubleshooting)).
+<!-- showcase:comparison:end -->
 
 ## Install
 
@@ -101,10 +91,11 @@ the next release, or [build from source](#build-from-source) today.
 
 **Tray menu:** Capture now, Settings..., About, Exit. **Settings:**
 
-<p align="center">
-  <img src="docs/settings.png" alt="Settings in Light theme: capture hotkey, OCR recognition language, start with Windows, language and theme" width="400">
-  <img src="docs/settings-dark.png" alt="Settings in Dark theme" width="400">
-</p>
+<!-- showcase:gallery:start (generated from docs/showcase/showcase.yml) -->
+<table>
+<tr><td width="50%" valign="top"><img src="docs/settings.png" alt="Settings in Light theme: capture hotkey, OCR recognition language, start with Windows, language and theme" width="100%"><br><sub>Settings, Light theme</sub></td><td width="50%" valign="top"><img src="docs/settings-dark.png" alt="Settings in Dark theme" width="100%"><br><sub>Settings, Dark theme</sub></td></tr>
+</table>
+<!-- showcase:gallery:end -->
 
 - **Capture hotkey:** click the box, then press the keys you want. It takes priority over a Windows shortcut on
   the same keys.

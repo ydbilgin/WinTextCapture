@@ -18,7 +18,7 @@
 </g>
 <text x="88" y="560" font-size="24" fill="#8BA0B5">Windows 10 / 11 · built-in Windows OCR · offline · MIT</text>
 <text x="1192" y="560" font-size="24" fill="#53D3FF" text-anchor="end" font-weight="600">github.com/ydbilgin/WinTextCapture</text>
-<!-- motif: lines of text with a selection frame -->
+
 <g transform="translate(860,150)">
 <rect x="0" y="0" width="340" height="250" rx="14" fill="#F4F8FA" fill-opacity="0.06" stroke="#FFFFFF" stroke-opacity="0.10"/>
 <rect x="34" y="40" width="210" height="14" rx="7" fill="#D8EDF7" fill-opacity="0.35"/>
