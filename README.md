@@ -1,3 +1,8 @@
+> **This project is finished and archived.**
+> Its text capture now lives in Snip, a newer screenshot and OCR tray tool of mine.
+> Snip is not public yet; this page will link to it when it is.
+> The last release (v1.0.2) stays available under Releases and keeps working.
+
 <p align="center">
   <img src="docs/icon.png" alt="WinTextCapture icon" width="96">
 </p>
